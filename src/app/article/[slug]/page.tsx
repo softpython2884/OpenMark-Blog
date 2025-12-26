@@ -9,6 +9,8 @@ import { ArticleActions } from '@/components/article-actions';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { ArticleRenderer } from '@/components/article-renderer';
+import { calculateReadingTime } from '@/lib/utils';
+import { Clock } from 'lucide-react';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const user = await getUser();
@@ -17,6 +19,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   if (!article) {
     notFound();
   }
+  
+  const readingTime = calculateReadingTime(article.content);
 
   return (
     <article className="container mx-auto px-4 py-8">
@@ -38,6 +42,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             </div>
             <span>&middot;</span>
             <time dateTime={article.publishedAt!}>{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+            <span>&middot;</span>
+            <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4" />
+                <span>
+                    {readingTime < 1 ? 'Moins d\'1 min' : `${Math.ceil(readingTime)} min de lecture`}
+                </span>
+            </div>
           </div>
         </header>
 
