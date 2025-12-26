@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,16 +12,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { generateArticleSummary } from '@/ai/flows/article-summary-generation';
 import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, X } from 'lucide-react';
+import { Sparkles, Tags, Text, Eye, Code } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -38,7 +39,7 @@ const emojis = ['😀', '😂', '😍', '🤔', '👍', '❤️', '🚀', '⭐',
 
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
-  const [initialState, formAction] = useFormState(saveArticle, null);
+  const [initialState, formAction] = useActionState(saveArticle, null);
   const [isAiPending, startAiTransition] = useTransition();
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const {
@@ -108,22 +109,34 @@ export function EditorForm({ article }: { article: Article | null }) {
         <Input id="title" {...register('title')} className="mt-1 text-2xl h-12" />
         {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="content">Markdown Content</Label>
-          <Textarea id="content" {...register('content')} className="mt-1 font-mono h-[500px]" />
-          {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
-        </div>
-        <div>
-          <Label>Live Preview</Label>
-          <Card className="mt-1 h-[500px] overflow-auto">
+      
+      <Tabs defaultValue="edit" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="edit">
+            <Code className="mr-2 h-4 w-4" />
+            Edit
+          </TabsTrigger>
+          <TabsTrigger value="preview">
+            <Eye className="mr-2 h-4 w-4" />
+            Preview
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="edit">
+            <Textarea 
+                id="content" 
+                {...register('content')} 
+                className="mt-1 font-mono h-[500px] rounded-t-none" 
+            />
+             {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
+        </TabsContent>
+        <TabsContent value="preview">
+          <Card className="mt-1 h-[500px] overflow-auto rounded-t-none">
             <CardContent className="prose dark:prose-invert max-w-none p-4">
-              <ReactMarkdown>{contentValue}</ReactMarkdown>
+              <ReactMarkdown>{contentValue || "Start typing to see a preview..."}</ReactMarkdown>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
       
       <div className="flex items-center gap-2">
         <Label>Emoji:</Label>
@@ -139,7 +152,7 @@ export function EditorForm({ article }: { article: Article | null }) {
       <div>
         <div className="flex justify-between items-center mb-2">
             <Label htmlFor="summary">AI-Generated Summary (TL;DR)</Label>
-            <Button type="button" size="sm" variant="outline" onClick={handleGenerateSummary} disabled={isAiPending}>
+            <Button type="button" size="sm" variant="outline" onClick={handleGenerateSummary} disabled={isAiPending || !contentValue}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 {isAiPending ? 'Generating...' : 'Generate Summary'}
             </Button>
@@ -151,7 +164,7 @@ export function EditorForm({ article }: { article: Article | null }) {
         <div className="flex-1">
             <div className="flex justify-between items-center mb-2">
                 <Label>AI-Suggested Titles</Label>
-                <Button type="button" size="sm" variant="outline" onClick={handleSuggestTitles} disabled={isAiPending}>
+                <Button type="button" size="sm" variant="outline" onClick={handleSuggestTitles} disabled={isAiPending || !contentValue}>
                     <Text className="mr-2 h-4 w-4" />
                     {isAiPending ? 'Suggesting...' : 'Suggest Titles'}
                 </Button>
@@ -173,7 +186,7 @@ export function EditorForm({ article }: { article: Article | null }) {
         <div className="flex-1">
             <div className="flex justify-between items-center mb-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Button type="button" size="sm" variant="outline" onClick={handleSuggestTags} disabled={isAiPending}>
+                <Button type="button" size="sm" variant="outline" onClick={handleSuggestTags} disabled={isAiPending || !contentValue}>
                     <Tags className="mr-2 h-4 w-4" />
                     {isAiPending ? 'Suggesting...' : 'Suggest Tags'}
                 </Button>
