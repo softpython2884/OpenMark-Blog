@@ -12,6 +12,33 @@ import { ArticleRenderer } from '@/components/article-renderer';
 import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
 import Link from 'next/link';
+import { Metadata, ResolvingMetadata } from 'next';
+
+type Props = {
+  params: { slug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const article = await getArticleBySlug(params.slug);
+
+  if (!article) {
+    return {
+      title: 'Article Not Found',
+    };
+  }
+
+  return {
+    title: article.title,
+    description: article.summary,
+    openGraph: {
+        images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl],
+    },
+  };
+}
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const user = await getUser();

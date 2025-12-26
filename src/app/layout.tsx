@@ -7,7 +7,10 @@ import { SiteLayout } from '@/components/site-layout';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'OpenMark Blog',
+  title: {
+    default: 'OpenMark Blog',
+    template: '%s | OpenMark Blog',
+  },
   description: 'A modern, open-source blogging platform.',
 };
 

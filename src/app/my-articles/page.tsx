@@ -2,6 +2,11 @@ import { getUser } from "@/lib/auth";
 import { getArticlesByAuthorId } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { MyArticlesClient } from "@/components/my-articles-client";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: 'My Articles',
+};
 
 export default async function MyArticlesPage() {
     const user = await getUser();

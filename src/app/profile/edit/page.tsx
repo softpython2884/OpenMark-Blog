@@ -2,6 +2,11 @@ import { getUser } from "@/lib/auth";
 import { getUserProfileData } from "@/lib/data";
 import { notFound, redirect } from "next/navigation";
 import { EditProfileForm } from "./edit-profile-form";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: 'Edit Profile',
+};
 
 export default async function EditProfilePage() {
     const user = await getUser();

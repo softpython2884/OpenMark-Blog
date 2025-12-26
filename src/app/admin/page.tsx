@@ -3,6 +3,11 @@ import { getAllUsers, getAllPublishedArticlesWithAuthor } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { UserRoleManager } from "@/components/user-role-manager";
 import { FeaturedArticleManager } from "@/components/featured-article-manager";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Admin Panel',
+};
 
 export default async function AdminPage() {
     const user = await getUser();

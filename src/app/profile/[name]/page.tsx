@@ -1,7 +1,31 @@
-import { getUserProfileData } from '@/lib/data';
+import { getUserProfileData, getUserByName } from '@/lib/data';
 import { getUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 import { ProfileClientPage } from '@/components/profile-client-page';
+import { Metadata, ResolvingMetadata } from 'next';
+
+type Props = {
+    params: { name: string }
+}
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const userName = decodeURIComponent(params.name);
+  const user = await getUserByName(userName);
+ 
+  if (!user) {
+    return {
+        title: 'User Not Found'
+    }
+  }
+
+  return {
+    title: user.name,
+    description: user.bio || `Check out the profile of ${user.name} on OpenMark Blog.`,
+  }
+}
 
 export default async function ProfilePage({ params }: { params: { name: string } }) {
     const loggedInUser = await getUser();

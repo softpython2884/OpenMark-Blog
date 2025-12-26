@@ -2,6 +2,11 @@ import { EditorForm } from '@/components/editor-form';
 import { getUser } from '@/lib/auth';
 import { getArticleBySlug } from '@/lib/data';
 import { notFound, redirect } from 'next/navigation';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Article Editor',
+};
 
 export default async function EditorPage({ params }: { params: { slug?: string[] } }) {
   const user = await getUser();

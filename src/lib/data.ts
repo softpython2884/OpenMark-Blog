@@ -35,7 +35,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
   }
 }
 
-export async function getAllPublishedArticlesWithAuthor(): Promise<Article[]> {
+export async function getAllPublishedArticlesWithAuthor(): Promise<Partial<Article>[]> {
     try {
         const articlesStmt = db.prepare(`
             SELECT 
@@ -46,7 +46,9 @@ export async function getAllPublishedArticlesWithAuthor(): Promise<Article[]> {
             WHERE a.published_at IS NOT NULL
             ORDER BY a.published_at DESC
         `);
-        return articlesStmt.all() as any[];
+        const articles = articlesStmt.all() as any[];
+        return articles.map(article => ({ ...article, isFeatured: article.isFeatured === 1 }));
+
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch all articles.');
