@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useActionState, useState, useTransition, useRef } from 'react';
+import { useActionState, useState, useTransition, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,11 +16,12 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -131,6 +132,70 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
   );
 };
 
+function ImportDialog({ onImport }: { onImport: (content: string) => void }) {
+  const [rawContent, setRawContent] = useState('');
+  const { toast } = useToast();
+
+  const handleConvert = () => {
+    let htmlContent = rawContent;
+
+    // Custom Callout Syntax: [VARIANT:Text]
+    htmlContent = htmlContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):(.*?)\]/gi, (match, variant, text) => {
+        const lowerVariant = variant.toLowerCase();
+        const capitalizedVariant = variant.charAt(0).toUpperCase() + variant.slice(1).toLowerCase();
+        return `<div data-callout data-variant="${lowerVariant}"><p>${capitalizedVariant}: ${text.trim()}</p></div>`;
+    });
+    
+    // Naive Markdown to HTML conversion
+    // Headers
+    htmlContent = htmlContent.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    htmlContent = htmlContent.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    htmlContent = htmlContent.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    // Bold
+    htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    htmlContent = htmlContent.replace(/__(.*?)__/gim, '<strong>$1</strong>');
+    // Italic
+    htmlContent = htmlContent.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+    htmlContent = htmlContent.replace(/_(.*?)_/gim, '<em>$1</em>');
+    // Newlines to paragraphs
+    htmlContent = htmlContent.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+
+
+    onImport(htmlContent);
+    toast({ title: 'Content Imported!', description: 'The raw text has been converted to HTML.' });
+  };
+
+  return (
+    <DialogContent className="max-w-3xl">
+      <DialogHeader>
+        <DialogTitle>Import Content</DialogTitle>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <Textarea
+          placeholder="Paste your Markdown, copied text, or raw HTML here..."
+          value={rawContent}
+          onChange={(e) => setRawContent(e.target.value)}
+          className="min-h-[300px] font-mono"
+        />
+        <div className="text-sm p-4 bg-muted/80 rounded-md">
+            <h4 className="font-semibold mb-2">Tip: Use Custom Callout Syntax</h4>
+            <p>You can create callouts directly from your raw text using the format <code className="font-semibold">[VARIANT:Your text here]</code>.</p>
+            <p className="mt-1">Supported variants: <code className="font-semibold">NOTE, TIP, SUCCESS, WARNING, DANGER, QUESTION</code>.</p>
+            <p className="mt-2">Example: <code className="font-semibold">[SUCCESS:Your article has been published!]</code> will become a success callout.</p>
+        </div>
+      </div>
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button type="button" variant="secondary">Cancel</Button>
+        </DialogClose>
+        <DialogClose asChild>
+          <Button type="button" onClick={handleConvert}>Convert and Import</Button>
+        </DialogClose>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
 
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
@@ -193,6 +258,10 @@ export function EditorForm({ article }: { article: Article | null }) {
       toast({ title: 'AI Tags Suggested!', description: 'New tags have been added.' });
     });
   };
+  
+  const handleImport = useCallback((newContent: string) => {
+    setValue('content', newContent, { shouldValidate: true, shouldDirty: true });
+  }, [setValue]);
 
   const handleInsertSnippet = (snippet: string) => {
     const textarea = contentTextareaRef.current;
@@ -258,8 +327,19 @@ export function EditorForm({ article }: { article: Article | null }) {
       </div>
       
       <div>
-        <Label htmlFor="content" className="text-lg">Content (HTML)</Label>
-        <Tabs defaultValue="edit" className="w-full mt-1">
+        <div className="flex items-center justify-between mb-1">
+            <Label htmlFor="content" className="text-lg">Content (HTML)</Label>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                        <Import className="mr-2 h-4 w-4" />
+                        Import from Text
+                    </Button>
+                </DialogTrigger>
+                <ImportDialog onImport={handleImport} />
+            </Dialog>
+        </div>
+        <Tabs defaultValue="edit" className="w-full">
           <TabsList>
             <TabsTrigger value="edit">Edit</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
