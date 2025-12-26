@@ -22,6 +22,11 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   
   const readingTime = calculateReadingTime(article.content);
 
+  const formatReadingTime = (time: number) => {
+    if (time < 1) return "Moins d'1 min de lecture";
+    return `${time} min de lecture`;
+  }
+
   return (
     <article className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
@@ -46,7 +51,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
             <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
                 <span>
-                    {readingTime < 1 ? 'Moins d\'1 min' : `${Math.ceil(readingTime)} min de lecture`}
+                    {formatReadingTime(readingTime)}
                 </span>
             </div>
           </div>
