@@ -32,6 +32,7 @@ function initializeDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
+      is_featured INTEGER DEFAULT 0,
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     );
     
@@ -68,27 +69,35 @@ function initializeDb() {
   `);
   
   // Poor-man's migration: Add columns if they don't exist
-  const columns = db.prepare("PRAGMA table_info(users)").all();
-  const columnNames = columns.map((col: any) => col.name);
+  const userColumns = db.prepare("PRAGMA table_info(users)").all();
+  const userColumnNames = userColumns.map((col: any) => col.name);
 
-  if (!columnNames.includes('registration_date')) {
+  if (!userColumnNames.includes('registration_date')) {
     console.log("Applying migration: Adding 'registration_date' to users table.");
     db.exec('ALTER TABLE users ADD COLUMN registration_date DATETIME');
     db.exec('UPDATE users SET registration_date = CURRENT_TIMESTAMP WHERE registration_date IS NULL');
   }
 
-  if (!columnNames.includes('bio')) {
+  if (!userColumnNames.includes('bio')) {
     console.log("Applying migration: Adding 'bio' to users table.");
     db.exec('ALTER TABLE users ADD COLUMN bio TEXT');
   }
 
-  if (!columnNames.includes('is_email_public')) {
+  if (!userColumnNames.includes('is_email_public')) {
     console.log("Applying migration: Adding 'is_email_public' to users table.");
     db.exec('ALTER TABLE users ADD COLUMN is_email_public INTEGER DEFAULT 0');
   }
 
+  const articleColumns = db.prepare("PRAGMA table_info(articles)").all();
+  const articleColumnNames = articleColumns.map((col: any) => col.name);
+
+  if (!articleColumnNames.includes('is_featured')) {
+      console.log("Applying migration: Adding 'is_featured' to articles table.");
+      db.exec('ALTER TABLE articles ADD COLUMN is_featured INTEGER DEFAULT 0');
+  }
+
   // Handle unique constraint on 'name' for existing data
-  if (columnNames.includes('name')) {
+  if (userColumnNames.includes('name')) {
       const duplicateNames = db.prepare(`
           SELECT name FROM users GROUP BY name HAVING COUNT(id) > 1
       `).all() as { name: string }[];
@@ -108,8 +117,6 @@ function initializeDb() {
           }
       }
       
-      // Re-create table with UNIQUE constraint on name.
-      // This is the SQLite way to add a constraint.
       const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
       if(userCount.count > 0) {
         try {

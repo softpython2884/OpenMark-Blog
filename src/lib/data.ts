@@ -7,11 +7,12 @@ export async function getPublishedArticles(): Promise<Article[]> {
     const articlesStmt = db.prepare(`
       SELECT 
         a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
-        u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+        u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt,
+        a.is_featured as isFeatured
       FROM articles a
       JOIN users u ON a.author_id = u.id
       WHERE a.published_at IS NOT NULL
-      ORDER BY a.published_at DESC
+      ORDER BY a.is_featured DESC, a.published_at DESC
     `);
     const articles = articlesStmt.all() as any[];
 
@@ -25,6 +26,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
     return articles.map(article => ({
       ...article,
       tags: tagsStmt.all(article.id) as Tag[],
+      isFeatured: article.isFeatured === 1,
     }));
 
   } catch (err) {
@@ -32,6 +34,25 @@ export async function getPublishedArticles(): Promise<Article[]> {
     throw new Error('Failed to fetch articles.');
   }
 }
+
+export async function getAllPublishedArticlesWithAuthor(): Promise<Article[]> {
+    try {
+        const articlesStmt = db.prepare(`
+            SELECT 
+                a.id, a.title, a.slug, a.is_featured as isFeatured,
+                u.name as authorName
+            FROM articles a
+            JOIN users u ON a.author_id = u.id
+            WHERE a.published_at IS NOT NULL
+            ORDER BY a.published_at DESC
+        `);
+        return articlesStmt.all() as any[];
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch all articles.');
+    }
+}
+
 
 export async function getArticleBySlug(slug: string, userId?: number): Promise<Article | null> {
     try {

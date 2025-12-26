@@ -42,6 +42,7 @@ export type Article = {
   tags: Tag[];
   likes: number;
   isLiked?: boolean;
+  isFeatured?: boolean;
 };
 
 export type Comment = {

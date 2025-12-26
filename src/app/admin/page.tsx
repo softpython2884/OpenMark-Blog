@@ -1,7 +1,8 @@
 import { getUser } from "@/lib/auth";
-import { getAllUsers } from "@/lib/data";
+import { getAllUsers, getAllPublishedArticlesWithAuthor } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { UserRoleManager } from "@/components/user-role-manager";
+import { FeaturedArticleManager } from "@/components/featured-article-manager";
 
 export default async function AdminPage() {
     const user = await getUser();
@@ -11,6 +12,7 @@ export default async function AdminPage() {
     }
 
     const users = await getAllUsers();
+    const articles = await getAllPublishedArticlesWithAuthor();
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -22,7 +24,13 @@ export default async function AdminPage() {
                     <UserRoleManager users={users} currentUser={user} />
                 </section>
                 
-                {/* Other admin sections can be added here */}
+                {user.role === 'ADMIN' && (
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4">Featured Article</h2>
+                        <p className="text-muted-foreground mb-4">Select an article to feature in the hero section of the homepage.</p>
+                        <FeaturedArticleManager articles={articles} />
+                    </section>
+                )}
             </div>
         </div>
     );

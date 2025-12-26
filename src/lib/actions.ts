@@ -405,3 +405,26 @@ export async function updateProfile(prevState: any, formData: FormData) {
   revalidatePath(`/profile/${encodeURIComponent(name)}`); // Revalidate new profile page
   redirect(`/profile/${encodeURIComponent(name)}`);
 }
+
+export async function setFeaturedArticle(articleId: number) {
+    const user = await getUser();
+    if (!user || user.role !== 'ADMIN') {
+        throw new Error('Permission denied: Only admins can feature articles.');
+    }
+
+    try {
+        db.transaction(() => {
+            // First, un-feature all other articles
+            db.prepare('UPDATE articles SET is_featured = 0').run();
+            // Then, feature the selected one
+            db.prepare('UPDATE articles SET is_featured = 1 WHERE id = ?').run(articleId);
+        })();
+        
+        revalidatePath('/');
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (e: any) {
+        console.error("Database error while featuring article:", e);
+        throw new Error("Database error while featuring the article.");
+    }
+}
