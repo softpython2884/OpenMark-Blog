@@ -18,10 +18,7 @@ const ArticleSchema = z.object({
   imageUrl: z.string()
     .url('Please enter a valid URL.')
     .optional()
-    .or(z.literal(''))
-    .refine(val => !val || val.startsWith('https://i.imgur.com/'), {
-      message: 'Only Imgur URLs (i.imgur.com) are allowed. Please upload your image to imgur.com/upload.',
-    }),
+    .or(z.literal('')),
   tags: z.string(), // Comma-separated
 });
 
@@ -35,6 +32,7 @@ function createSlug(title: string) {
 }
 
 export async function saveArticle(prevState: any, formData: FormData) {
+  console.log("saveArticle action called");
   const user = await getUser();
   if (!user || !['ADMIN', 'EDITOR', 'AUTHOR'].includes(user.role)) {
     return { message: 'Permission denied.' };
@@ -44,6 +42,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
   const validatedFields = ArticleSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
+    console.log("Validation failed", validatedFields.error.flatten().fieldErrors);
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Failed to save article due to validation errors.',
@@ -99,6 +98,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
         }
     })();
   } catch (e: any) {
+    console.error("Database transaction failed:", e);
     return { message: `Database Error: ${e.message}` };
   }
 

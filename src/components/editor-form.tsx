@@ -32,10 +32,7 @@ const ArticleFormSchema = z.object({
   imageUrl: z.string()
     .url('Please enter a valid URL.')
     .optional()
-    .or(z.literal(''))
-    .refine(val => !val || val.startsWith('https://i.imgur.com/'), {
-      message: 'Only Imgur URLs (i.imgur.com) are allowed. Please upload your image to imgur.com/upload.',
-    }),
+    .or(z.literal('')),
   tags: z.string(),
 });
 
@@ -251,6 +248,10 @@ export function EditorForm({ article }: { article: Article | null }) {
   const tagsValue = watch('tags');
 
   useEffect(() => {
+    // Log the state for debugging purposes.
+    if (state) {
+        console.log("Form state updated:", state);
+    }
     if (state?.message) {
         toast({
             variant: state.errors ? 'destructive' : 'default',
@@ -348,11 +349,8 @@ export function EditorForm({ article }: { article: Article | null }) {
         <Label htmlFor="imageUrl" className="text-lg">Image URL</Label>
         <div className="flex items-center gap-2 mt-1">
           <PictureInPicture className="h-5 w-5 text-muted-foreground" />
-          <Input id="imageUrl" {...register('imageUrl')} placeholder="https://i.imgur.com/..." />
+          <Input id="imageUrl" {...register('imageUrl')} placeholder="https://..." />
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
-            Only Imgur URLs are allowed. Please upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="underline">imgur.com/upload</a> and paste the direct link (i.imgur.com/...).
-        </p>
         {errors.imageUrl && <p className="text-destructive text-sm mt-1">{errors.imageUrl.message}</p>}
       </div>
       

@@ -42,10 +42,13 @@ export function ArticleRenderer({ content }: { content: Article['content']}) {
 
     useEffect(() => {
         // Sanitize the HTML on the client-side to prevent XSS attacks.
-        const clean = DOMPurify.sanitize(content, {
-            ADD_TAGS: ['div', 'ul', 'ol', 'li', 'pre', 'code', 'blockquote', 'details', 'summary', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'a', 'hr', 'img'],
+        let clean = DOMPurify.sanitize(content, {
+            ADD_TAGS: ['div', 'ul', 'ol', 'li', 'pre', 'code', 'blockquote', 'details', 'summary', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'a', 'hr', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
             ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item', 'href', 'src', 'alt'],
         });
+
+        // Fix for hydration errors with tables by removing whitespace
+        clean = clean.replace(/>\s+</g, '><');
 
         // We need to parse the HTML string and convert it to React components
         // to properly handle our custom Callout component.
