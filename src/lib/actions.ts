@@ -34,13 +34,10 @@ export async function saveArticle(prevState: any, formData: FormData) {
 
   const user = await getUser();
   if (!user || !['ADMIN', 'EDITOR', 'AUTHOR'].includes(user.role)) {
-    console.error('Permission denied for user:', user);
     return { message: 'Permission denied.' };
   }
 
   const rawData = Object.fromEntries(formData.entries());
-  console.log('Raw form data:', rawData);
-
   const validatedFields = ArticleSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
@@ -54,39 +51,40 @@ export async function saveArticle(prevState: any, formData: FormData) {
   console.log('Validation successful. Data:', validatedFields.data);
 
   const { id, title, content, summary, imageUrl, tags, status } = validatedFields.data;
-  const slug = createSlug(title);
+  let slug = createSlug(title);
   
   try {
-    console.log('Starting database transaction...');
     db.transaction(() => {
         let articleId: number;
         if (id) {
-            // Update existing article
             articleId = Number(id);
-            console.log(`Updating article ID: ${articleId}`);
+            const existingSlug = db.prepare('SELECT slug FROM articles WHERE id = ?').get(articleId) as {slug: string};
+            if(existingSlug.slug !== slug){
+                const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ? and id !=?').get(slug, articleId);
+                 if (slugCheck) {
+                    slug = `${slug}-${Date.now()}`;
+                }
+            }
+            
             const stmt = db.prepare(
                 `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, status = ?, published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN datetime('now') ELSE published_at END, updated_at = datetime('now') WHERE id = ?`
             );
             stmt.run(title, slug, content, summary || null, imageUrl || null, status, status, articleId);
-            
-            // Clear old tags
-            console.log(`Clearing old tags for article ID: ${articleId}`);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
         } else {
-            // Create new article
-            console.log('Creating new article...');
+            const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ?').get(slug);
+            if (slugCheck) {
+                slug = `${slug}-${Date.now()}`;
+            }
             const stmt = db.prepare(
                 `INSERT INTO articles (title, slug, content, summary, image_url, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
             );
             const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, status, status === 'published' ? new Date().toISOString() : null);
             articleId = Number(result.lastInsertRowid);
-            console.log(`New article created with ID: ${articleId}`);
         }
 
-        // Handle tags
         const tagNames = tags.split(',').map(t => t.trim()).filter(Boolean);
         if (tagNames.length > 0) {
-            console.log('Processing tags:', tagNames);
             const insertTag = db.prepare('INSERT OR IGNORE INTO tags (name) VALUES (?)');
             const getTag = db.prepare('SELECT id FROM tags WHERE name = ?');
             const insertArticleTag = db.prepare('INSERT INTO article_tags (article_id, tag_id) VALUES (?, ?)');
@@ -100,13 +98,11 @@ export async function saveArticle(prevState: any, formData: FormData) {
             }
         }
     })();
-    console.log('Database transaction successful.');
   } catch (e: any) {
     console.error('Database Error during saveArticle:', e);
     return { message: `Database Error: ${e.message}` };
   }
 
-  console.log('Revalidating paths and redirecting...');
   revalidatePath('/');
   revalidatePath(`/article/${slug}`);
   if (id) {

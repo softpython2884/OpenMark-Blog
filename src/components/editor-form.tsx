@@ -230,7 +230,7 @@ export function EditorForm({ article }: { article: Article | null }) {
     watch,
     control,
     setValue,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting },
   } = useForm<ArticleFormData>({
     resolver: zodResolver(ArticleFormSchema),
     defaultValues: {
@@ -247,17 +247,16 @@ export function EditorForm({ article }: { article: Article | null }) {
   const contentValue = watch('content');
   const tagsValue = watch('tags');
 
-  // DEBUGGING: Log state changes
   useEffect(() => {
-    if (state) {
-        console.log('Form state updated:', state);
-        if(state.message && !state.errors) {
-            toast({
-                variant: 'destructive',
-                title: 'Error Saving Article',
-                description: state.message
-            });
-        }
+    if (state?.message && !state.errors) {
+        toast({
+            variant: 'destructive',
+            title: 'Error Saving Article',
+            description: state.message
+        });
+    }
+    if (state?.errors) {
+        console.log('Form validation errors:', state.errors);
     }
   }, [state, toast]);
 
@@ -471,6 +470,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             </RadioGroup>
           )}
         />
+        {state?.errors?.status && <p className="text-destructive text-sm mt-1">{state.errors.status[0]}</p>}
       </div>
 
       <div className="flex justify-end gap-4">
