@@ -20,7 +20,10 @@ import { Sparkles, Tags, Text } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { HtmlEditor } from './html-editor';
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+
+const HtmlEditor = dynamic(() => import('./html-editor').then(mod => mod.HtmlEditor), { ssr: false });
 
 
 const ArticleFormSchema = z.object({

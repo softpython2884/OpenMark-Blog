@@ -68,8 +68,8 @@
   },
   "overrides": {
     "react-quill": {
-      "react": "^19.2.1",
-      "react-dom": "^19.2.1"
+      "react": "$react",
+      "react-dom": "$react-dom"
     }
   }
 }
