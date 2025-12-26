@@ -15,7 +15,13 @@ const ArticleSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   content: z.string().min(10, 'Content must be at least 10 characters.'),
   summary: z.string().optional(),
-  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  imageUrl: z.string()
+    .url('Please enter a valid URL.')
+    .optional()
+    .or(z.literal(''))
+    .refine(val => !val || val.startsWith('https://i.imgur.com/'), {
+      message: 'Only Imgur URLs (i.imgur.com) are allowed. Please upload your image to imgur.com/upload.',
+    }),
   tags: z.string(), // Comma-separated
 });
 

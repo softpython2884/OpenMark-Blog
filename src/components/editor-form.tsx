@@ -16,7 +16,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link as LinkIcon, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
@@ -29,7 +29,13 @@ const ArticleFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   content: z.string().min(10, 'Content must be at least 10 characters.'),
   summary: z.string().optional(),
-  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  imageUrl: z.string()
+    .url('Please enter a valid URL.')
+    .optional()
+    .or(z.literal(''))
+    .refine(val => !val || val.startsWith('https://i.imgur.com/'), {
+      message: 'Only Imgur URLs (i.imgur.com) are allowed. Please upload your image to imgur.com/upload.',
+    }),
   tags: z.string(),
 });
 
@@ -64,7 +70,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
     { icon: Heading3, label: 'H3', snippet: '<h3>Heading 3</h3>' },
     { icon: Bold, label: 'Bold', snippet: '<strong>Bold Text</strong>' },
     { icon: Italic, label: 'Italic', snippet: '<em>Italic Text</em>' },
-    { icon: Link, label: 'Link', snippet: '<a href="https://example.com">Link Text</a>' },
+    { icon: LinkIcon, label: 'Link', snippet: '<a href="https://example.com">Link Text</a>' },
     { icon: Strikethrough, label: 'Strikethrough', title: 'Strikethrough', snippet: '<s>Strikethrough Text</s>' },
     { icon: Code2, label: 'Code', title: 'Inline Code', snippet: '<code class="font-code">Inline Code</code>' },
     { icon: Superscript, label: 'Superscript', title: 'Superscript', snippet: '<sup>Superscript</sup>' },
@@ -78,7 +84,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
     { icon: Quote, label: 'Quote', snippet: '<blockquote>\n  <p>This is a blockquote.</p>\n</blockquote>\n' },
     { icon: Code, label: 'Code Block', snippet: '<pre><code class="font-code">// Your code here</code></pre>\n' },
     { icon: Minus, label: 'Separator', snippet: '<hr>\n' },
-    { icon: ImageIcon, label: 'Image', snippet: '<img src="https://picsum.photos/seed/1/800/400" alt="Placeholder image" />\n' },
+    { icon: ImageIcon, label: 'Image', snippet: '<img src="https://i.imgur.com/your-image-id.png" alt="Description" />\n' },
   ];
   
   const custom = [
@@ -228,7 +234,7 @@ export function EditorForm({ article }: { article: Article | null }) {
     watch,
     control,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<ArticleFormData>({
     resolver: zodResolver(ArticleFormSchema),
     defaultValues: {
@@ -251,9 +257,6 @@ export function EditorForm({ article }: { article: Article | null }) {
             title: state.errors ? 'Error Saving Article' : 'Success!',
             description: state.message
         });
-    }
-    if (state?.errors) {
-        console.log('Form validation errors:', state.errors);
     }
   }, [state, toast]);
 
@@ -338,16 +341,19 @@ export function EditorForm({ article }: { article: Article | null }) {
       <div>
         <Label htmlFor="title" className="text-lg">Title</Label>
         <Input id="title" {...register('title')} className="mt-1 text-2xl h-12" />
-        {state?.errors?.title && <p className="text-destructive text-sm mt-1">{state.errors.title[0]}</p>}
+        {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
       </div>
 
       <div>
         <Label htmlFor="imageUrl" className="text-lg">Image URL</Label>
         <div className="flex items-center gap-2 mt-1">
           <PictureInPicture className="h-5 w-5 text-muted-foreground" />
-          <Input id="imageUrl" {...register('imageUrl')} placeholder="https://..." />
+          <Input id="imageUrl" {...register('imageUrl')} placeholder="https://i.imgur.com/..." />
         </div>
-        {state?.errors?.imageUrl && <p className="text-destructive text-sm mt-1">{state.errors.imageUrl[0]}</p>}
+        <p className="text-sm text-muted-foreground mt-2">
+            Only Imgur URLs are allowed. Please upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noopener noreferrer" className="underline">imgur.com/upload</a> and paste the direct link (i.imgur.com/...).
+        </p>
+        {errors.imageUrl && <p className="text-destructive text-sm mt-1">{errors.imageUrl.message}</p>}
       </div>
       
       <div>
@@ -387,7 +393,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             <ArticleRenderer content={contentValue} />
           </TabsContent>
         </Tabs>
-        {state?.errors?.content && <p className="text-destructive text-sm mt-1">{state.errors.content[0]}</p>}
+        {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
       </div>
 
       <Separator />
@@ -450,7 +456,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             {isSubmitting ? 'Saving...' : 'Save Article'}
         </Button>
       </div>
-      {state?.message && !state.errors && <p className="text-destructive">{state.message}</p>}
+      {state?.message && !state.errors && <p className="text-green-600">{state.message}</p>}
     </form>
   );
 }
