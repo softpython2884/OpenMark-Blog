@@ -110,9 +110,9 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                       <div className="relative h-28 w-28 flex items-center justify-center">
-                          <CircularProgress value={user.levelProgress} className="absolute" />
-                          <Avatar className="h-24 w-24">
+                       <div className="relative h-28 w-28">
+                          <CircularProgress value={user.levelProgress} className="absolute inset-0 m-auto" />
+                          <Avatar className="h-24 w-24 absolute inset-0 m-auto">
                               <AvatarImage src={user.avatarUrl} alt={user.name} />
                               <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback>
                           </Avatar>
