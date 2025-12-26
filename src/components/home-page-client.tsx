@@ -150,7 +150,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                 </div>
                 <div className="w-full flex justify-between items-end">
                     <div className="flex flex-wrap gap-2">
-                        {article.tags.slice(0, 2).map(tag => (
+                        {article.tags.map(tag => (
                             <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
                         ))}
                     </div>
