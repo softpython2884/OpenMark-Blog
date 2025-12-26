@@ -6,6 +6,7 @@ import { getUser } from './auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Role } from './definitions';
+import { getCommentsByArticleId } from './server-data';
 
 const ArticleSchema = z.object({
   id: z.string().optional(),
@@ -108,6 +109,10 @@ export async function addComment(articleId: number, content: string) {
     } catch(e: any) {
         return { success: false, message: e.message };
     }
+}
+
+export async function getCommentsAction(articleId: number) {
+  return await getCommentsByArticleId(articleId);
 }
 
 export async function toggleLike(articleId: number) {

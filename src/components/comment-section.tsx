@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useTransition, useRef } from 'react';
-import { getCommentsByArticleId } from '@/lib/data';
+import { useState, useEffect, useTransition, useRef, useCallback } from 'react';
 import type { Comment, User } from '@/lib/definitions';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { addComment } from '@/lib/actions';
+import { addComment, getCommentsAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 
 export function CommentSection({ articleId, user }: { articleId: number; user: User | null }) {
@@ -17,15 +16,26 @@ export function CommentSection({ articleId, user }: { articleId: number; user: U
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    async function fetchComments() {
-      setIsLoading(true);
-      const fetchedComments = await getCommentsByArticleId(articleId);
+  const fetchComments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const fetchedComments = await getCommentsAction(articleId);
       setComments(fetchedComments);
+    } catch (error) {
+      console.error("Failed to fetch comments", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load comments",
+        description: "Please try refreshing the page.",
+      });
+    } finally {
       setIsLoading(false);
     }
+  }, [articleId, toast]);
+
+  useEffect(() => {
     fetchComments();
-  }, [articleId]);
+  }, [fetchComments]);
   
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,8 +46,7 @@ export function CommentSection({ articleId, user }: { articleId: number; user: U
             const result = await addComment(articleId, content);
             if(result.success) {
                 setContent('');
-                const newComments = await getCommentsByArticleId(articleId);
-                setComments(newComments);
+                await fetchComments();
             } else {
                 throw new Error(result.message);
             }
