@@ -3,7 +3,7 @@
 import { Header } from './header';
 import { User } from '@/lib/definitions';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Heart } from 'lucide-react';
 
@@ -32,7 +32,7 @@ function Footer() {
             <div className="border-t border-border/50 py-8">
                 <div className="container mx-auto px-4 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-1.5 mb-4">
-                        Créé avec <Heart className="h-4 w-4 text-red-500 fill-current" /> par 
+                        Created with <Heart className="h-4 w-4 text-red-500 fill-current" /> by 
                         <a 
                             href="https://forgenet.fr" 
                             target="_blank" 
@@ -43,13 +43,13 @@ function Footer() {
                         </a>
                     </div>
                     <div className="text-sm space-x-4 mb-2">
-                        <Link href="/privacy-policy" className="hover:text-primary">Politique de confidentialité</Link>
+                        <Link href="/privacy-policy" className="hover:text-primary">Privacy Policy</Link>
                         <span>&middot;</span>
-                        <Link href="/terms-of-service" className="hover:text-primary">Conditions d'utilisation</Link>
+                        <Link href="/terms-of-service" className="hover:text-primary">Terms of Service</Link>
                         <span>&middot;</span>
-                        <Link href="/legal" className="hover:text-primary">Mentions légales</Link>
+                        <Link href="/legal" className="hover:text-primary">Legal</Link>
                     </div>
-                    <p className="text-xs">&copy; {new Date().getFullYear()} OpenMark Blog. Tous droits réservés.</p>
+                    <p className="text-xs">&copy; {new Date().getFullYear()} OpenMark Blog. All rights reserved.</p>
                 </div>
             </div>
         </footer>
@@ -63,10 +63,23 @@ export function SiteLayout({
   user: User | null;
   children: React.ReactNode;
 }) {
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+
+  // Clone children to pass props, only if it's a valid React element
+  const childrenWithProps = React.isValidElement(children) 
+    ? React.cloneElement(children as React.ReactElement<any>, { 
+        onSearchOpenChange: setIsSearchOpen,
+        onTagClick: (tag: string) => {
+          // This logic might need to be passed down to SearchPalette if it's not already there
+          setIsSearchOpen(true);
+        }
+     })
+    : children;
+
   return (
     <>
-      <Header user={user} />
-      <main className="flex-1">{children}</main>
+      <Header user={user} isSearchOpen={isSearchOpen} onSearchOpenChange={setIsSearchOpen} />
+      <main className="flex-1">{childrenWithProps}</main>
       <Footer />
     </>
   );

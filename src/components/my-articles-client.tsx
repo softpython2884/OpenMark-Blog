@@ -53,14 +53,14 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
             try {
                 await deleteArticle(articleToDelete.id);
                 toast({
-                    title: 'Article Supprimé',
-                    description: `"${articleToDelete.title}" a été supprimé avec succès.`,
+                    title: 'Article Deleted',
+                    description: `"${articleToDelete.title}" has been successfully deleted.`,
                 });
             } catch (error: any) {
                 toast({
                     variant: 'destructive',
-                    title: 'Erreur',
-                    description: error.message || "Impossible de supprimer l'article.",
+                    title: 'Error',
+                    description: error.message || "Could not delete the article.",
                 });
             } finally {
                 setIsDeleteDialogOpen(false);
@@ -74,13 +74,13 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
             <div className="border rounded-lg">
                 <Table>
                      {!articles.length && (
-                        <TableCaption>Vous n'avez pas encore publié d'articles.</TableCaption>
+                        <TableCaption>You haven't published any articles yet.</TableCaption>
                     )}
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Titre</TableHead>
+                            <TableHead>Title</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Date de Publication</TableHead>
+                            <TableHead>Publication Date</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -90,7 +90,7 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                 <TableCell className="font-medium">{article.title}</TableCell>
                                 <TableCell>
                                     <Badge variant={article.publishedAt ? 'default' : 'secondary'}>
-                                        {article.publishedAt ? 'Publié' : 'Brouillon'}
+                                        {article.publishedAt ? 'Published' : 'Draft'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -100,18 +100,18 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Ouvrir le menu</span>
+                                                <span className="sr-only">Open menu</span>
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem onClick={() => router.push(`/editor/${article.slug}`)}>
                                                 <Pencil className="mr-2 h-4 w-4" />
-                                                Modifier
+                                                Edit
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => openDeleteDialog(article)} className="text-destructive">
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Supprimer
+                                                Delete
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -125,15 +125,15 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Cette action est irréversible. L'article &quot;{articleToDelete?.title}&quot; sera supprimé définitivement.
+                            This action is irreversible. The article &quot;{articleToDelete?.title}&quot; will be permanently deleted.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-                            {isPending ? 'Suppression...' : 'Supprimer'}
+                            {isPending ? 'Deleting...' : 'Delete'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

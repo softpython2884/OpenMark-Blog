@@ -10,12 +10,12 @@ export default function ArticleNotFound() {
       </div>
       <div className="relative z-10 flex flex-col items-center">
         <Newspaper className="w-24 h-24 text-primary mb-6" />
-        <h1 className="text-5xl md:text-6xl font-headline font-bold mb-4">Article non trouvé</h1>
+        <h1 className="text-5xl md:text-6xl font-headline font-bold mb-4">Article Not Found</h1>
         <p className="text-lg text-muted-foreground max-w-lg mb-8">
-          Désolé, nous n'avons pas trouvé l'article que vous cherchez. Il a peut-être été supprimé ou l'URL est incorrecte.
+          Sorry, we couldn't find the article you're looking for. It might have been deleted or the URL is incorrect.
         </p>
         <Button asChild size="lg">
-          <Link href="/">Voir tous les articles</Link>
+          <Link href="/">View all articles</Link>
         </Button>
       </div>
     </div>

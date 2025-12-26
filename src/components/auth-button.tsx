@@ -71,7 +71,7 @@ export function AuthButton({ user }: { user: User | null }) {
                  <DropdownMenuItem asChild>
                     <Link href="/my-articles">
                         <BookUser className="mr-2 h-4 w-4" />
-                        <span>Mes Articles</span>
+                        <span>My Articles</span>
                     </Link>
                 </DropdownMenuItem>
             </>

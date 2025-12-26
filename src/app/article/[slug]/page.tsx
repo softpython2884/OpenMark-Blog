@@ -23,8 +23,8 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const readingTime = calculateReadingTime(article.content);
 
   const formatReadingTime = (time: number) => {
-    if (time < 1) return "Moins d'1 min de lecture";
-    return `${time} min de lecture`;
+    if (time < 1) return "Less than 1 min read";
+    return `${time} min read`;
   }
 
   return (

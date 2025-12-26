@@ -14,7 +14,7 @@ export default async function MyArticlesPage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-4xl font-headline font-bold mb-8">Mes Articles</h1>
+            <h1 className="text-4xl font-headline font-bold mb-8">My Articles</h1>
             <MyArticlesClient articles={articles} />
         </div>
     );

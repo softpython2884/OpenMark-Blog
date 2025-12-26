@@ -10,12 +10,12 @@ export default function NotFound() {
         </div>
         <div className="relative z-10 flex flex-col items-center">
             <FileQuestion className="w-24 h-24 text-primary mb-6 animate-pulse" />
-            <h1 className="text-5xl md:text-6xl font-headline font-bold mb-4">404 - Page Introuvable</h1>
+            <h1 className="text-5xl md:text-6xl font-headline font-bold mb-4">404 - Page Not Found</h1>
             <p className="text-lg text-muted-foreground max-w-lg mb-8">
-                Désolé, la page que vous cherchez n'existe pas ou a été déplacée. Vérifiez l'URL ou retournez à l'accueil.
+                Sorry, the page you are looking for does not exist or has been moved. Check the URL or go back home.
             </p>
             <Button asChild size="lg">
-                <Link href="/">Retour à l'accueil</Link>
+                <Link href="/">Back to Home</Link>
             </Button>
         </div>
     </div>
