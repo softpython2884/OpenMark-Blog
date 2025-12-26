@@ -5,7 +5,7 @@ import db from './db';
 import { createSession, getUser } from './auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Role, User } from './definitions';
+import { Role, User, Article } from './definitions';
 import { getCommentsByArticleId } from './server-data';
 import bcrypt from 'bcryptjs';
 import { placeholderImages } from './placeholder-images';
@@ -256,4 +256,61 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   redirect('/');
+}
+
+export async function searchArticles(query: string): Promise<Article[]> {
+  if (!query) return [];
+
+  const searchQuery = `%${query}%`;
+  
+  try {
+    // We need to find all articles that match the query in title, content, author name, or tag name.
+    // This is a bit complex with joins.
+    const articlesStmt = db.prepare(`
+      SELECT DISTINCT a.id
+      FROM articles a
+      LEFT JOIN users u ON a.author_id = u.id
+      LEFT JOIN article_tags at ON a.id = at.article_id
+      LEFT JOIN tags t ON at.tag_id = t.id
+      WHERE a.title LIKE ? 
+         OR a.content LIKE ? 
+         OR u.name LIKE ? 
+         OR t.name LIKE ?
+      ORDER BY a.published_at DESC
+      LIMIT 10
+    `);
+    
+    const articleIds = articlesStmt.all(searchQuery, searchQuery, searchQuery, searchQuery) as { id: number }[];
+    
+    if (articleIds.length === 0) return [];
+    
+    const placeholders = articleIds.map(() => '?').join(',');
+    
+    const articlesDataStmt = db.prepare(`
+      SELECT 
+        a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
+        u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+      FROM articles a
+      JOIN users u ON a.author_id = u.id
+      WHERE a.id IN (${placeholders})
+    `);
+    
+    const articles = articlesDataStmt.all(...articleIds.map(row => row.id)) as any[];
+
+    const tagsStmt = db.prepare(`
+      SELECT t.id, t.name 
+      FROM tags t
+      JOIN article_tags at ON t.id = at.tag_id
+      WHERE at.article_id = ?
+    `);
+
+    return articles.map(article => ({
+      ...article,
+      tags: tagsStmt.all(article.id),
+    }));
+
+  } catch (err) {
+    console.error('Search Database Error:', err);
+    throw new Error('Failed to search articles.');
+  }
 }
