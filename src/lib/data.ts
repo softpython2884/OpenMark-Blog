@@ -1,5 +1,6 @@
+
 import db from './db';
-import type { Article, User, Comment, Tag } from './definitions';
+import type { Article, User, Comment, Tag, Report } from './definitions';
 import { calculateGamificationData } from './gamification';
 
 export async function getPublishedArticles(): Promise<Article[]> {
@@ -323,4 +324,49 @@ export async function getFollowedArticles(userId: number): Promise<Article[]> {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch followed articles.');
     }
+}
+
+export async function getPendingReports(): Promise<Report[]> {
+  try {
+    const reports = db.prepare(`
+        SELECT
+            r.id, r.type, r.item_id as itemId, r.reporter_id as reporterId,
+            u.name as reporterName, r.reason, r.status, r.created_at as createdAt
+        FROM reports r
+        JOIN users u ON r.reporter_id = u.id
+        WHERE r.status = 'pending'
+        ORDER BY r.created_at DESC
+    `).all() as Omit<Report, 'itemContent' | 'itemUrl'>[];
+
+    const processedReports: Report[] = [];
+
+    for (const report of reports) {
+      let itemContent = 'Contenu introuvable';
+      let itemUrl = '#';
+
+      if (report.type === 'article') {
+        const article = db.prepare('SELECT title, slug FROM articles WHERE id = ?').get(report.itemId) as { title: string; slug: string } | undefined;
+        if (article) {
+          itemContent = article.title;
+          itemUrl = `/article/${article.slug}`;
+        }
+      } else if (report.type === 'comment') {
+        const comment = db.prepare('SELECT content, article_id FROM comments WHERE id = ?').get(report.itemId) as { content: string; article_id: number } | undefined;
+        if (comment) {
+          const article = db.prepare('SELECT slug FROM articles WHERE id = ?').get(comment.article_id) as { slug: string } | undefined;
+          itemContent = comment.content;
+          if (article) {
+            itemUrl = `/article/${article.slug}#comment-${report.itemId}`;
+          }
+        }
+      }
+      processedReports.push({ ...report, itemContent, itemUrl });
+    }
+
+    return processedReports;
+
+  } catch (err) {
+    console.error('Database Error:', err);
+    throw new Error('Failed to fetch reports.');
+  }
 }

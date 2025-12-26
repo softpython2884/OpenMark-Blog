@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -485,5 +486,49 @@ export async function toggleFollow(authorId: number) {
     } catch (e: any) {
         console.error("Database error while toggling follow:", e);
         return { success: false, message: "A database error occurred." };
+    }
+}
+
+export async function reportItem(type: 'article' | 'comment', itemId: number, reason: string) {
+    const user = await getUser();
+    if (!user) {
+        return { success: false, message: 'Vous devez être connecté pour signaler un contenu.' };
+    }
+    if (!reason.trim()) {
+        return { success: false, message: 'Veuillez fournir une raison pour votre signalement.' };
+    }
+
+    try {
+        const existingReport = db.prepare(
+            'SELECT id FROM reports WHERE type = ? AND item_id = ? AND reporter_id = ? AND status = \'pending\''
+        ).get(type, itemId, user.id);
+
+        if (existingReport) {
+            return { success: false, message: 'Vous avez déjà signalé ce contenu.' };
+        }
+
+        db.prepare(
+            'INSERT INTO reports (type, item_id, reporter_id, reason) VALUES (?, ?, ?, ?)'
+        ).run(type, itemId, user.id, reason);
+
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, message: `Erreur de base de données: ${e.message}` };
+    }
+}
+
+export async function updateReportStatus(reportId: number, status: 'resolved' | 'dismissed') {
+    const user = await getUser();
+    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
+        return { success: false, message: 'Permission refusée.' };
+    }
+
+    try {
+        db.prepare('UPDATE reports SET status = ? WHERE id = ?').run(status, reportId);
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, message: `Erreur de base de données: ${e.message}` };
     }
 }

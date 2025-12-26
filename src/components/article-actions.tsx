@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
 import { Button } from './ui/button';
-import { ThumbsUp, Share2, Twitter, Linkedin, Code2 } from 'lucide-react';
-import { toggleLike } from '@/lib/actions';
+import { ThumbsUp, Share2, Twitter, Linkedin, Code2, Flag } from 'lucide-react';
+import { reportItem, toggleLike } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
@@ -20,9 +22,64 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+
+function ReportDialog({ type, itemId, onOpenChange }: { type: 'article' | 'comment', itemId: number, onOpenChange: (open: boolean) => void }) {
+    const [reason, setReason] = useState('');
+    const [isPending, startTransition] = useTransition();
+    const { toast } = useToast();
+
+    const handleSubmit = () => {
+        if (!reason.trim()) {
+            toast({ variant: 'destructive', title: 'Raison requise', description: 'Veuillez fournir une raison pour votre signalement.' });
+            return;
+        }
+        startTransition(async () => {
+            try {
+                const result = await reportItem(type, itemId, reason);
+                if (result.success) {
+                    toast({ title: 'Contenu signalé', description: 'Merci. Votre signalement a été envoyé à notre équipe de modération.' });
+                    onOpenChange(false);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error: any) {
+                toast({ variant: 'destructive', title: 'Erreur', description: error.message });
+            }
+        });
+    }
+
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Signaler ce contenu</DialogTitle>
+                <DialogDescription>
+                    Veuillez nous indiquer pourquoi vous signalez ce contenu. Les signalements abusifs peuvent entraîner des sanctions.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4 space-y-2">
+                <Label htmlFor="report-reason">Raison du signalement</Label>
+                <Textarea 
+                    id="report-reason"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Ex: spam, contenu inapproprié, harcèlement..."
+                />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="secondary">Annuler</Button>
+                </DialogClose>
+                <Button onClick={handleSubmit} disabled={isPending}>
+                    {isPending ? 'Envoi...' : 'Envoyer le signalement'}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+}
 
 export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { articleId: number, initialLikes: number, initialIsLiked: boolean }) {
   const [likes, setLikes] = useState(initialLikes);
@@ -30,6 +87,7 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [isEmbedDialogOpen, setIsEmbedDialogOpen] = useState(false);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
   const handleLike = async () => {
     startTransition(async () => {
@@ -92,7 +150,7 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
             <span>{likes} {likes === 1 ? 'Like' : 'Likes'}</span>
         </Button>
         
-        <Dialog open={isEmbedDialogOpen} onOpenChange={setIsEmbedDialogOpen}>
+        <Dialog>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -113,36 +171,49 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
                         <Share2 className="mr-2 h-4 w-4" />
                         <span>Copy Link</span>
                     </DropdownMenuItem>
-                    <DialogTrigger asChild>
+                    
+                    <DialogTrigger asChild onSelect={(e) => { e.preventDefault(); setIsEmbedDialogOpen(true); }}>
                         <DropdownMenuItem>
                             <Code2 className="mr-2 h-4 w-4" />
                             <span>Embed</span>
                         </DropdownMenuItem>
                     </DialogTrigger>
+                    
+                    <DropdownMenuSeparator />
+
+                    <DialogTrigger asChild onSelect={(e) => { e.preventDefault(); setIsReportDialogOpen(true); }}>
+                        <DropdownMenuItem className="text-destructive">
+                            <Flag className="mr-2 h-4 w-4" />
+                            <span>Signaler</span>
+                        </DropdownMenuItem>
+                     </DialogTrigger>
+
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Embed Article</DialogTitle>
-                </DialogHeader>
-                <div className="mt-4 space-y-2">
-                    <Label htmlFor="embed-code">Copy this code to embed the article on your site:</Label>
-                    <Textarea
-                        id="embed-code"
-                        readOnly
-                        value={iframeCode}
-                        rows={4}
-                        className="font-mono text-sm"
-                    />
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="secondary">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleCopyEmbedCode}>Copy Code</Button>
-                </DialogFooter>
-            </DialogContent>
+            {isEmbedDialogOpen && (
+                 <DialogContent onInteractOutside={() => setIsEmbedDialogOpen(false)} onEscapeKeyDown={() => setIsEmbedDialogOpen(false)}>
+                    <DialogHeader>
+                        <DialogTitle>Embed Article</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 space-y-2">
+                        <Label htmlFor="embed-code">Copy this code to embed the article on your site:</Label>
+                        <Textarea
+                            id="embed-code"
+                            readOnly
+                            value={iframeCode}
+                            rows={4}
+                            className="font-mono text-sm"
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setIsEmbedDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleCopyEmbedCode}>Copy Code</Button>
+                    </DialogFooter>
+                </DialogContent>
+            )}
+
+            {isReportDialogOpen && <ReportDialog type="article" itemId={articleId} onOpenChange={setIsReportDialogOpen} />}
         </Dialog>
     </div>
   );

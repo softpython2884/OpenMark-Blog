@@ -29,7 +29,8 @@ function initializeDb() {
       summary TEXT,
       image_url TEXT,
       author_id INTEGER NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT
+_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
       is_featured INTEGER DEFAULT 0,
@@ -75,6 +76,17 @@ function initializeDb() {
       PRIMARY KEY (follower_id, followed_id),
       FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('article', 'comment')),
+      item_id INTEGER NOT NULL,
+      reporter_id INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'resolved', 'dismissed')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
   

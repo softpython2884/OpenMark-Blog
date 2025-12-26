@@ -1,8 +1,10 @@
+
 import { getUser } from "@/lib/auth";
-import { getAllUsers, getAllPublishedArticlesWithAuthor } from "@/lib/data";
+import { getAllUsers, getAllPublishedArticlesWithAuthor, getPendingReports } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { UserRoleManager } from "@/components/user-role-manager";
 import { FeaturedArticleManager } from "@/components/featured-article-manager";
+import { ReportManager } from "@/components/report-manager";
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -18,12 +20,18 @@ export default async function AdminPage() {
 
     const users = await getAllUsers();
     const articles = await getAllPublishedArticlesWithAuthor();
+    const reports = await getPendingReports();
 
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-4xl font-headline font-bold mb-8">Admin Panel</h1>
 
             <div className="space-y-12">
+                 <section>
+                    <h2 className="text-2xl font-semibold mb-4">Signalements en attente</h2>
+                    <ReportManager reports={reports} />
+                </section>
+                
                 <section>
                     <h2 className="text-2xl font-semibold mb-4">User Management</h2>
                     <UserRoleManager users={users} currentUser={user} />

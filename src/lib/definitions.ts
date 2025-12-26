@@ -1,3 +1,4 @@
+
 export type Role = 'ADMIN' | 'EDITOR' | 'AUTHOR' | 'MODERATOR' | 'READER' | 'SUSPENDED';
 
 export type BadgeInfo = {
@@ -56,4 +57,17 @@ export type Comment = {
   createdAt: string;
   parentId: number | null;
   children?: Comment[];
+};
+
+export type Report = {
+  id: number;
+  type: 'article' | 'comment';
+  itemId: number;
+  reporterId: number;
+  reporterName: string;
+  reason: string;
+  status: 'pending' | 'resolved' | 'dismissed';
+  createdAt: string;
+  itemContent: string; // This will hold article title or comment content
+  itemUrl: string;
 };
