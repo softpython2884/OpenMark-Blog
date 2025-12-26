@@ -2,12 +2,13 @@
 
 import { z } from 'zod';
 import db from './db';
-import { getUser, createSession } from './auth';
+import { createSession } from './auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Role } from './definitions';
 import { getCommentsByArticleId } from './server-data';
 import bcrypt from 'bcryptjs';
+import { placeholderImages } from './placeholder-images';
 
 const ArticleSchema = z.object({
   id: z.string().optional(),
@@ -193,4 +194,50 @@ export async function signup(prevState: any, formData: FormData) {
     }
     
     redirect('/login');
+}
+
+
+import { getUser } from './auth';
+
+const LoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
+export async function login(prevState: any, formData: FormData) {
+  const validatedFields = LoginSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Invalid data.',
+    };
+  }
+
+  const { email, password } = validatedFields.data;
+
+  try {
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as (User & { password?: string }) | undefined;
+
+    if (!user || !user.password) {
+      return { message: 'Invalid credentials.' };
+    }
+
+    const passwordsMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordsMatch) {
+      return { message: 'Invalid credentials.' };
+    }
+    
+    const { password: _, ...userSessionData } = user;
+
+    await createSession({ userId: userSessionData.id, ...userSessionData });
+    
+  } catch (error) {
+     return { message: 'Something went wrong.' };
+  }
+
+  redirect('/');
 }

@@ -63,7 +63,7 @@ function initializeDb() {
     );
   `);
 
-  // Seed initial data
+  // Seed initial data if users table is empty
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
   if (userCount.count === 0) {
     const insertUser = db.prepare(`
@@ -81,6 +81,7 @@ function initializeDb() {
     console.log('Database seeded with initial users.');
   }
 
+  // Seed initial articles if articles table is empty
   const articleCount = db.prepare('SELECT COUNT(*) as count FROM articles').get() as { count: number };
   if (articleCount.count === 0) {
     const admin = db.prepare("SELECT id FROM users WHERE role = 'ADMIN'").get() as { id: number };
@@ -129,6 +130,7 @@ function initializeDb() {
   }
 }
 
+// Ensure the DB is initialized on startup
 try {
   initializeDb();
 } catch (error) {
