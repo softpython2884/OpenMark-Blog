@@ -6,7 +6,7 @@ import { UserRoleManager } from "@/components/user-role-manager";
 export default async function AdminPage() {
     const user = await getUser();
 
-    if (!user || user.role !== 'ADMIN') {
+    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
         redirect('/');
     }
 

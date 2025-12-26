@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'EDITOR' | 'AUTHOR' | 'MODERATOR' | 'READER';
+export type Role = 'ADMIN' | 'EDITOR' | 'AUTHOR' | 'MODERATOR' | 'READER' | 'SUSPENDED';
 
 export type BadgeInfo = {
     name: string;

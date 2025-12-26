@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
-const roles: Role[] = ['ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER'];
+const roles: Role[] = ['ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER', 'SUSPENDED'];
 
 export function UserRoleManager({ users, currentUser }: { users: User[], currentUser: User }) {
   const [isPending, startTransition] = useTransition();
@@ -75,7 +75,7 @@ export function UserRoleManager({ users, currentUser }: { users: User[], current
               </TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>{user.role}</Badge>
+                <Badge variant={user.role === 'ADMIN' ? 'default' : user.role === 'SUSPENDED' ? 'destructive' : 'secondary'}>{user.role}</Badge>
               </TableCell>
               <TableCell className="text-right">
                 {currentUser.id !== user.id ? (

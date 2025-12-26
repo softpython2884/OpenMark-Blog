@@ -144,6 +144,7 @@ export async function deleteArticle(articleId: number) {
 export async function addComment(articleId: number, content: string) {
     const user = await getUser();
     if (!user) throw new Error('You must be logged in to comment.');
+    if (user.role === 'SUSPENDED') throw new Error('Your account is suspended. You cannot post comments.');
     if (!content.trim()) throw new Error('Comment cannot be empty.');
 
     try {
@@ -184,11 +185,11 @@ export async function toggleLike(articleId: number) {
 
 export async function updateUserRole(userId: number, role: Role) {
     const user = await getUser();
-    if (!user || user.role !== 'ADMIN') {
-        throw new Error('Permission denied: Only admins can change user roles.');
+    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
+        throw new Error('Permission denied: Only admins or moderators can change user roles.');
     }
     if (user.id === userId) {
-        throw new Error('Admins cannot change their own role.');
+        throw new Error('You cannot change your own role.');
     }
 
     try {
