@@ -8,6 +8,7 @@ import { getUser } from '@/lib/auth';
 import { ArticleActions } from '@/components/article-actions';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { ArticleRenderer } from '@/components/article-renderer';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const user = await getUser();
@@ -57,10 +58,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           </div>
         )}
 
-        <div 
-          className="prose dark:prose-invert max-w-none text-lg"
-          dangerouslySetInnerHTML={{ __html: article.content }}
-        />
+        <ArticleRenderer content={article.content} />
 
         <Separator className="my-12" />
         

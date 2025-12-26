@@ -49,32 +49,33 @@ const iconVariants = cva('mt-1 h-5 w-5 shrink-0', {
 
 type CalloutVariant = VariantProps<typeof calloutVariants>['variant'];
 
-interface CalloutProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof calloutVariants> {
+export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof calloutVariants> {
   icon?: string;
 }
 
 const ICONS: Record<string, LucideIcon> = {
+    note: Info,
     info: Info,
     tip: Zap,
+    zap: Zap,
     warning: AlertTriangle,
+    alerttriangle: AlertTriangle,
     danger: Flame,
+    flame: Flame,
     activity: Activity,
     alarm: AlarmClock,
     album: Album,
     angry: Angry,
     annoyed: Annoyed,
-    zap: Zap,
-    flame: Flame,
-    alerttriangle: AlertTriangle,
 };
 
 function Callout({ children, className, variant, icon, ...props }: CalloutProps) {
-  const Icon = icon ? (ICONS[icon] || ICONS[variant as string] || Info) : Info;
+  const Icon = icon ? (ICONS[icon] || ICONS[variant as string] || Info) : (ICONS[variant as string] || Info);
 
   return (
     <div className={cn(calloutVariants({ variant }), className)} {...props}>
       <Icon className={cn(iconVariants({ variant }))} />
-      <div className="w-full prose-p:my-0 prose-headings:my-0">{children}</div>
+      <div className="w-full [&_p]:my-0">{children}</div>
     </div>
   );
 }
