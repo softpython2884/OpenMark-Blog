@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { Header } from '@/components/header';
 import { cn } from '@/lib/utils';
 import { getUser } from '@/lib/auth';
+import { SiteLayout } from '@/components/site-layout';
 
 export const metadata: Metadata = {
   title: 'OpenMark Blog',
@@ -25,10 +25,9 @@ export default async function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased h-full flex flex-col')}>
-        <Header user={user} />
-        <main className="flex-1">
+        <SiteLayout user={user}>
           {children}
-        </main>
+        </SiteLayout>
         <Toaster />
       </body>
     </html>
