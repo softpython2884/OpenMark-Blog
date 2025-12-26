@@ -47,7 +47,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <h1 className="text-4xl md:text-5xl font-headline font-bold leading-tight mb-4">{article.title}</h1>
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Link href={`/profile/${article.authorId}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Link href={`/profile/${encodeURIComponent(article.authorName || '')}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
                   <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>

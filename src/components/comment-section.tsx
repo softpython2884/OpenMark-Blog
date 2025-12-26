@@ -92,7 +92,7 @@ export function CommentSection({ articleId, user }: { articleId: number; user: U
         ) : comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-4">
-              <Link href={`/profile/${comment.authorId}`}>
+              <Link href={`/profile/${encodeURIComponent(comment.authorName || '')}`}>
                 <Avatar>
                   <AvatarImage src={comment.authorAvatarUrl} alt={comment.authorName} />
                   <AvatarFallback>{comment.authorName?.charAt(0)}</AvatarFallback>
@@ -100,7 +100,7 @@ export function CommentSection({ articleId, user }: { articleId: number; user: U
               </Link>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Link href={`/profile/${comment.authorId}`} className="font-semibold hover:underline">{comment.authorName}</Link>
+                  <Link href={`/profile/${encodeURIComponent(comment.authorName || '')}`} className="font-semibold hover:underline">{comment.authorName}</Link>
                   <span className="text-xs text-muted-foreground">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </span>

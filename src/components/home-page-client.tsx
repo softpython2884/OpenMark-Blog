@@ -79,7 +79,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                     </h1>
                     <div className="flex items-center gap-4 text-lg mb-6">
                         <div className="flex items-center gap-2">
-                           <Link href={`/profile/${heroArticle.authorId}`} className="flex items-center gap-2 hover:underline">
+                           <Link href={`/profile/${encodeURIComponent(heroArticle.authorName || '')}`} className="flex items-center gap-2 hover:underline">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={heroArticle.authorAvatarUrl} alt={heroArticle.authorName} />
                                 <AvatarFallback>{heroArticle.authorName?.charAt(0)}</AvatarFallback>
@@ -190,7 +190,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                           ))}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Link href={`/profile/${article.authorId}`} className="hover:underline flex items-center gap-2">
+                          <Link href={`/profile/${encodeURIComponent(article.authorName || '')}`} className="hover:underline flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
                                 <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
