@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -29,6 +30,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 gap-0">
+        <DialogTitle className="sr-only">Search</DialogTitle>
         <div className="flex items-center p-4 border-b">
           <Search className="h-5 w-5 mr-3 text-muted-foreground" />
           <Input
