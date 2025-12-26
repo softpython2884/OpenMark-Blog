@@ -63,23 +63,11 @@ export function SiteLayout({
   user: User | null;
   children: React.ReactNode;
 }) {
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-
-  // Clone children to pass props, only if it's a valid React element
-  const childrenWithProps = React.isValidElement(children) 
-    ? React.cloneElement(children as React.ReactElement<any>, { 
-        onSearchOpenChange: setIsSearchOpen,
-        onTagClick: (tag: string) => {
-          // This logic might need to be passed down to SearchPalette if it's not already there
-          setIsSearchOpen(true);
-        }
-     })
-    : children;
 
   return (
     <>
-      <Header user={user} isSearchOpen={isSearchOpen} onSearchOpenChange={setIsSearchOpen} />
-      <main className="flex-1">{childrenWithProps}</main>
+      <Header user={user} />
+      <main className="flex-1">{children}</main>
       <Footer />
     </>
   );
