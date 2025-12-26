@@ -28,7 +28,7 @@ export default async function AdminPage() {
 
             <div className="space-y-12">
                  <section>
-                    <h2 className="text-2xl font-semibold mb-4">Signalements en attente</h2>
+                    <h2 className="text-2xl font-semibold mb-4">Pending Reports</h2>
                     <ReportManager reports={reports} />
                 </section>
                 

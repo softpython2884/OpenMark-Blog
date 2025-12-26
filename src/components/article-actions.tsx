@@ -34,20 +34,20 @@ function ReportDialog({ type, itemId, onOpenChange }: { type: 'article' | 'comme
 
     const handleSubmit = () => {
         if (!reason.trim()) {
-            toast({ variant: 'destructive', title: 'Raison requise', description: 'Veuillez fournir une raison pour votre signalement.' });
+            toast({ variant: 'destructive', title: 'Reason required', description: 'Please provide a reason for your report.' });
             return;
         }
         startTransition(async () => {
             try {
                 const result = await reportItem(type, itemId, reason);
                 if (result.success) {
-                    toast({ title: 'Contenu signalé', description: 'Merci. Votre signalement a été envoyé à notre équipe de modération.' });
+                    toast({ title: 'Content Reported', description: 'Thank you. Your report has been sent to our moderation team.' });
                     onOpenChange(false);
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error: any) {
-                toast({ variant: 'destructive', title: 'Erreur', description: error.message });
+                toast({ variant: 'destructive', title: 'Error', description: error.message });
             }
         });
     }
@@ -55,26 +55,26 @@ function ReportDialog({ type, itemId, onOpenChange }: { type: 'article' | 'comme
     return (
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Signaler ce contenu</DialogTitle>
+                <DialogTitle>Report this content</DialogTitle>
                 <DialogDescription>
-                    Veuillez nous indiquer pourquoi vous signalez ce contenu. Les signalements abusifs peuvent entraîner des sanctions.
+                    Please let us know why you are reporting this content. Abusive reports may lead to sanctions.
                 </DialogDescription>
             </DialogHeader>
             <div className="mt-4 space-y-2">
-                <Label htmlFor="report-reason">Raison du signalement</Label>
+                <Label htmlFor="report-reason">Reason for reporting</Label>
                 <Textarea 
                     id="report-reason"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="Ex: spam, contenu inapproprié, harcèlement..."
+                    placeholder="E.g., spam, inappropriate content, harassment..."
                 />
             </div>
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button variant="secondary">Annuler</Button>
+                    <Button variant="secondary">Cancel</Button>
                 </DialogClose>
                 <Button onClick={handleSubmit} disabled={isPending}>
-                    {isPending ? 'Envoi...' : 'Envoyer le signalement'}
+                    {isPending ? 'Submitting...' : 'Submit Report'}
                 </Button>
             </DialogFooter>
         </DialogContent>
@@ -184,7 +184,7 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
                     <DialogTrigger asChild onSelect={(e) => { e.preventDefault(); setIsReportDialogOpen(true); }}>
                         <DropdownMenuItem className="text-destructive">
                             <Flag className="mr-2 h-4 w-4" />
-                            <span>Signaler</span>
+                            <span>Report</span>
                         </DropdownMenuItem>
                      </DialogTrigger>
 

@@ -29,8 +29,8 @@ export function ReportManager({ reports }: { reports: Report[] }) {
         const result = await updateReportStatus(reportId, status);
         if (result.success) {
           toast({
-            title: 'Signalement mis à jour',
-            description: `Le signalement a été marqué comme ${status === 'resolved' ? 'résolu' : 'rejeté'}.`,
+            title: 'Report Updated',
+            description: `The report has been marked as ${status}.`,
           });
         } else {
           throw new Error(result.message);
@@ -38,7 +38,7 @@ export function ReportManager({ reports }: { reports: Report[] }) {
       } catch (error: any) {
         toast({
           variant: 'destructive',
-          title: 'Erreur',
+          title: 'Error',
           description: error.message,
         });
       }
@@ -49,14 +49,14 @@ export function ReportManager({ reports }: { reports: Report[] }) {
     <div className="border rounded-lg">
       <Table>
         {!reports.length && (
-          <TableCaption>Aucun signalement en attente.</TableCaption>
+          <TableCaption>No pending reports.</TableCaption>
         )}
         <TableHeader>
           <TableRow>
             <TableHead>Type</TableHead>
-            <TableHead>Contenu signalé</TableHead>
-            <TableHead>Raison</TableHead>
-            <TableHead>Signalé par</TableHead>
+            <TableHead>Reported Content</TableHead>
+            <TableHead>Reason</TableHead>
+            <TableHead>Reported By</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -86,7 +86,7 @@ export function ReportManager({ reports }: { reports: Report[] }) {
                         disabled={isPending}
                         className="text-green-600 hover:text-green-700"
                     >
-                        <Check className="mr-2 h-4 w-4" /> Résoudre
+                        <Check className="mr-2 h-4 w-4" /> Resolve
                     </Button>
                     <Button
                         size="sm"
@@ -95,7 +95,7 @@ export function ReportManager({ reports }: { reports: Report[] }) {
                         disabled={isPending}
                          className="text-red-600 hover:text-red-700"
                     >
-                        <X className="mr-2 h-4 w-4" /> Rejeter
+                        <X className="mr-2 h-4 w-4" /> Dismiss
                     </Button>
                 </div>
               </TableCell>

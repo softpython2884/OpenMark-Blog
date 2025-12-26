@@ -492,10 +492,10 @@ export async function toggleFollow(authorId: number) {
 export async function reportItem(type: 'article' | 'comment', itemId: number, reason: string) {
     const user = await getUser();
     if (!user) {
-        return { success: false, message: 'Vous devez être connecté pour signaler un contenu.' };
+        return { success: false, message: 'You must be logged in to report content.' };
     }
     if (!reason.trim()) {
-        return { success: false, message: 'Veuillez fournir une raison pour votre signalement.' };
+        return { success: false, message: 'Please provide a reason for your report.' };
     }
 
     try {
@@ -504,7 +504,7 @@ export async function reportItem(type: 'article' | 'comment', itemId: number, re
         ).get(type, itemId, user.id);
 
         if (existingReport) {
-            return { success: false, message: 'Vous avez déjà signalé ce contenu.' };
+            return { success: false, message: 'You have already reported this content.' };
         }
 
         db.prepare(
@@ -514,14 +514,14 @@ export async function reportItem(type: 'article' | 'comment', itemId: number, re
         revalidatePath('/admin');
         return { success: true };
     } catch (e: any) {
-        return { success: false, message: `Erreur de base de données: ${e.message}` };
+        return { success: false, message: `Database Error: ${e.message}` };
     }
 }
 
 export async function updateReportStatus(reportId: number, status: 'resolved' | 'dismissed') {
     const user = await getUser();
     if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
-        return { success: false, message: 'Permission refusée.' };
+        return { success: false, message: 'Permission denied.' };
     }
 
     try {
@@ -529,6 +529,6 @@ export async function updateReportStatus(reportId: number, status: 'resolved' | 
         revalidatePath('/admin');
         return { success: true };
     } catch (e: any) {
-        return { success: false, message: `Erreur de base de données: ${e.message}` };
+        return { success: false, message: `Database Error: ${e.message}` };
     }
 }
