@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import Link from 'next/link';
 import { signup } from '@/lib/actions';
 import {
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 
 export default function SignupPage() {
   const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(signup, initialState);
+  const [state, dispatch] = useActionState(signup, initialState);
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
