@@ -22,6 +22,7 @@ export type Article = {
   imageUrl: string | null;
   authorId: number;
   authorName?: string;
+  authorAvatarUrl?: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;

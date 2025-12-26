@@ -31,6 +31,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
+                <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
                 <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
               </Avatar>
               <span>{article.authorName}</span>
