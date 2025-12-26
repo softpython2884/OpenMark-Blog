@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useActionState, useState, useTransition, useRef, useCallback } from 'react';
+import { useActionState, useState, useTransition, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -216,7 +216,7 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
 
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
-  const [initialState, formAction] = useActionState(saveArticle, null);
+  const [state, formAction] = useActionState(saveArticle, null);
   const [isAiPending, startAiTransition] = useTransition();
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -228,7 +228,7 @@ export function EditorForm({ article }: { article: Article | null }) {
     watch,
     control,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<ArticleFormData>({
     resolver: zodResolver(ArticleFormSchema),
     defaultValues: {
@@ -319,6 +319,17 @@ export function EditorForm({ article }: { article: Article | null }) {
     }
   };
 
+  useEffect(() => {
+    if (state?.message && !state.errors) {
+        toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: state.message,
+        });
+    }
+  }, [state, toast]);
+
+
   return (
     <form action={formAction} className="space-y-8">
       <input type="hidden" {...register('id')} />
@@ -326,7 +337,7 @@ export function EditorForm({ article }: { article: Article | null }) {
       <div>
         <Label htmlFor="title" className="text-lg">Title</Label>
         <Input id="title" {...register('title')} className="mt-1 text-2xl h-12" />
-        {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
+        {state?.errors?.title && <p className="text-destructive text-sm mt-1">{state.errors.title[0]}</p>}
       </div>
 
       <div>
@@ -335,7 +346,7 @@ export function EditorForm({ article }: { article: Article | null }) {
           <PictureInPicture className="h-5 w-5 text-muted-foreground" />
           <Input id="imageUrl" {...register('imageUrl')} placeholder="https://..." />
         </div>
-        {errors.imageUrl && <p className="text-destructive text-sm mt-1">{errors.imageUrl.message}</p>}
+        {state?.errors?.imageUrl && <p className="text-destructive text-sm mt-1">{state.errors.imageUrl[0]}</p>}
       </div>
       
       <div>
@@ -375,7 +386,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             <ArticleRenderer content={contentValue} />
           </TabsContent>
         </Tabs>
-        {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
+        {state?.errors?.content && <p className="text-destructive text-sm mt-1">{state.errors.content[0]}</p>}
       </div>
 
       <Separator />
@@ -462,7 +473,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             {isSubmitting ? 'Saving...' : 'Save Article'}
         </Button>
       </div>
-      {initialState?.message && <p className="text-destructive">{initialState.message}</p>}
+      {state?.message && !state.errors && <p className="text-destructive">{state.message}</p>}
     </form>
   );
 }
