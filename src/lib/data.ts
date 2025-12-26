@@ -1,5 +1,6 @@
 import db from './db';
 import type { Article, User, Comment, Tag } from './definitions';
+import { calculateGamificationData } from './gamification';
 
 export async function getPublishedArticles(): Promise<Article[]> {
   try {
@@ -232,9 +233,17 @@ export async function getUserProfileData(userId: number) {
         if (!user) {
             return null;
         }
+
         const articles = await getArticlesByAuthorId(userId);
         const topArticles = await getTopArticlesByAuthorId(userId);
-        return { user, articles, topArticles };
+        const gamificationData = await calculateGamificationData(userId);
+        
+        const userWithGamification: User = {
+            ...user,
+            ...gamificationData,
+        };
+
+        return { user: userWithGamification, articles, topArticles };
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch user profile data.');

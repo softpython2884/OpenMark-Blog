@@ -1,5 +1,11 @@
 export type Role = 'ADMIN' | 'EDITOR' | 'AUTHOR' | 'MODERATOR' | 'READER';
 
+export type BadgeInfo = {
+    name: string;
+    description: string;
+    icon: React.ComponentType<{ className?: string }>;
+};
+
 export type User = {
   id: number;
   name: string;
@@ -7,6 +13,10 @@ export type User = {
   role: Role;
   avatarUrl: string;
   registrationDate: string;
+  score?: number;
+  level?: number;
+  levelProgress?: number;
+  badges?: BadgeInfo[];
 };
 
 export type Tag = {

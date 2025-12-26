@@ -1,16 +1,18 @@
 'use client';
 
-import type { Article, User } from '@/lib/definitions';
+import type { Article, User, BadgeInfo } from '@/lib/definitions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star } from 'lucide-react';
+import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
+import { Progress } from './ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 
 const createSnippet = (html: string, length: number) => {
@@ -61,6 +63,25 @@ const TopArticleCard = ({ article, reason }: { article: Article, reason: string 
     )
 }
 
+const UserBadge = ({ badge }: { badge: BadgeInfo }) => {
+    const Icon = badge.icon;
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div className="p-2 bg-accent/50 rounded-full cursor-pointer">
+                        <Icon className="h-5 w-5 text-accent-foreground/80" />
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p className="font-bold">{badge.name}</p>
+                    <p className="text-sm text-muted-foreground">{badge.description}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
+};
+
 export function ProfileClientPage({ user, articles, topArticles, loggedInUser }: { user: User, articles: Article[], topArticles: Array<Article & { reason: string }>, loggedInUser: (User & { userId: number }) | null }) {
 
   const isOwnProfile = loggedInUser?.id === user.id;
@@ -89,7 +110,12 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
               <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
+              <div className="flex items-center justify-center md:justify-start gap-4">
+                <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
+                <div className="flex gap-2">
+                    {user.badges?.map(badge => <UserBadge key={badge.name} badge={badge} />)}
+                </div>
+              </div>
               <Badge variant="outline" className="mt-2 text-md">{user.role}</Badge>
               <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mt-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -108,14 +134,32 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                 )}
               </div>
             </div>
-            {isOwnProfile && (
-              <div>
-                <Button variant="outline">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Profile
-                </Button>
-              </div>
-            )}
+            <div className="flex flex-col gap-4 items-center">
+                 {isOwnProfile && (
+                    <Button variant="outline">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Profile
+                    </Button>
+                )}
+                {user.score !== undefined && user.level !== undefined && (
+                    <div className="w-48 text-center">
+                        <div className="flex justify-between items-baseline mb-1 font-semibold">
+                            <span className="text-lg text-primary">Level {user.level}</span>
+                            <span className="text-sm text-muted-foreground">{user.score} XP</span>
+                        </div>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger className="w-full">
+                                    <Progress value={user.levelProgress} />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{user.levelProgress}% to next level</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
+            </div>
           </div>
         </Card>
       </header>
