@@ -85,7 +85,7 @@ function initializeDb() {
     insertArticle.run(
       'Exploring the Mountains', 
       'exploring-the-mountains', 
-      'The mountains are calling, and I must go. This is a deep dive into the philosophy of mountaineering and the spiritual connection to the peaks. We will cover preparation, mindset, and the sheer joy of reaching a summit.', 
+      '<h1>Exploring the Mountains</h1><p>The mountains are calling, and I must go. This is a deep dive into the philosophy of mountaineering and the spiritual connection to the peaks. We will cover preparation, mindset, and the sheer joy of reaching a summit.</p>', 
       'A philosophical journey into the heart of mountaineering, exploring its spiritual and practical aspects.', 
       admin.id, 
       'published'
@@ -93,7 +93,7 @@ function initializeDb() {
     insertArticle.run(
       'The Bustling City Life', 
       'the-bustling-city-life', 
-      'City life is a symphony of chaos and order. From neon lights to quiet park benches, we explore the duality of urban existence. This article presents a photo-essay combined with personal anecdotes from living in a metropolis for over a decade.',
+      '<h1>The Bustling City Life</h1><p>City life is a symphony of chaos and order. From neon lights to quiet park benches, we explore the duality of urban existence. This article presents a photo-essay combined with personal anecdotes from living in a metropolis for over a decade.</p>',
       'An exploration of urban existence through a photo-essay and personal stories, capturing the chaos and harmony of city life.',
       author.id, 
       'published'
