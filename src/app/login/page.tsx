@@ -1,49 +1,31 @@
-import { getUsersForLogin } from '@/lib/data';
-import { createSession } from '@/lib/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { LoginForm } from './login-form';
 
-export default async function LoginPage() {
-  const users = await getUsersForLogin();
-
-  async function handleLogin(formData: FormData) {
-    'use server';
-    const userId = formData.get('userId');
-    if (userId) {
-      await createSession(Number(userId));
-      redirect('/');
-    }
-  }
-
+export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
       <Card className="w-full max-w-sm mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Login As</CardTitle>
-          <CardDescription>Select a user profile to continue to the application.</CardDescription>
+          <CardTitle className="text-2xl font-headline">Login</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Select name="userId" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a user..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={String(user.id)}>
-                      {user.name} ({user.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-          </form>
+          <LoginForm />
+          <div className="mt-4 text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="underline">
+              Sign up
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -2,11 +2,12 @@
 
 import { z } from 'zod';
 import db from './db';
-import { getUser } from './auth';
+import { getUser, createSession } from './auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Role } from './definitions';
 import { getCommentsByArticleId } from './server-data';
+import bcrypt from 'bcryptjs';
 
 const ArticleSchema = z.object({
   id: z.string().optional(),
@@ -153,4 +154,43 @@ export async function updateUserRole(userId: number, role: Role) {
     } catch(e: any) {
         return { success: false, message: e.message };
     }
+}
+
+const SignUpSchema = z.object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+    email: z.string().email({ message: "Please enter a valid email." }),
+    password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+});
+
+export async function signup(prevState: any, formData: FormData) {
+    const validatedFields = SignUpSchema.safeParse(
+        Object.fromEntries(formData.entries())
+    );
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Invalid data. Please check the fields.',
+        };
+    }
+    
+    const { name, email, password } = validatedFields.data;
+
+    try {
+        const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+        if (existingUser) {
+            return { message: 'A user with this email already exists.' };
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const defaultRole = 'READER'; 
+        const defaultAvatar = placeholderImages[Math.floor(Math.random() * placeholderImages.length)].imageUrl;
+        
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, avatar_url) VALUES (?, ?, ?, ?, ?)');
+        stmt.run(name, email, hashedPassword, defaultRole, defaultAvatar);
+    } catch (e: any) {
+        return { message: `Database Error: ${e.message}` };
+    }
+    
+    redirect('/login');
 }

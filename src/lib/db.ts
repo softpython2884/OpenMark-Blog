@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { placeholderImages } from './placeholder-images';
+import bcrypt from 'bcryptjs';
 
 const db = new Database('local.db');
 db.pragma('journal_mode = WAL');
@@ -11,6 +12,7 @@ function initializeDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
+      password TEXT,
       role TEXT NOT NULL CHECK(role IN ('ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER')),
       avatar_url TEXT
     );
@@ -65,11 +67,17 @@ function initializeDb() {
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
   if (userCount.count === 0) {
     const insertUser = db.prepare(`
-      INSERT INTO users (name, email, role, avatar_url) VALUES (?, ?, ?, ?)
+      INSERT INTO users (name, email, role, avatar_url, password) VALUES (?, ?, ?, ?, ?)
     `);
-    insertUser.run('Admin User', 'admin@example.com', 'ADMIN', placeholderImages[0].imageUrl);
-    insertUser.run('Author User', 'author@example.com', 'AUTHOR', placeholderImages[1].imageUrl);
-    insertUser.run('Reader User', 'reader@example.com', 'READER', placeholderImages[2].imageUrl);
+    
+    // Hash passwords
+    const adminPassword = bcrypt.hashSync('admin', 10);
+    const authorPassword = bcrypt.hashSync('author', 10);
+    const readerPassword = bcrypt.hashSync('reader', 10);
+
+    insertUser.run('Admin User', 'admin@example.com', 'ADMIN', placeholderImages[0].imageUrl, adminPassword);
+    insertUser.run('Author User', 'author@example.com', 'AUTHOR', placeholderImages[1].imageUrl, authorPassword);
+    insertUser.run('Reader User', 'reader@example.com', 'READER', placeholderImages[2].imageUrl, readerPassword);
     console.log('Database seeded with initial users.');
   }
 
