@@ -16,7 +16,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -33,29 +33,93 @@ const ArticleFormSchema = z.object({
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
 
-const CalloutToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
+const SnippetButton = ({ onInsert, snippet, children }: { onInsert: (snippet: string) => void; snippet: string; children: React.ReactNode }) => (
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    onClick={() => onInsert(snippet)}
+    className="flex-shrink-0"
+  >
+    {children}
+  </Button>
+);
+
+const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
   const callouts = [
-    { variant: 'note', icon: Info, label: 'Note' },
-    { variant: 'tip', icon: Zap, label: 'Tip' },
-    { variant: 'warning', icon: AlertTriangle, label: 'Warning' },
-    { variant: 'danger', icon: Flame, label: 'Danger' },
+    { variant: 'note', icon: Info, label: 'Note', snippet: `<div data-callout data-variant="note"><p>Note: Add your content here.</p></div>\n` },
+    { variant: 'tip', icon: Zap, label: 'Tip', snippet: `<div data-callout data-variant="tip"><p>Tip: Add your content here.</p></div>\n` },
+    { variant: 'success', icon: CheckCircle, label: 'Success', snippet: `<div data-callout data-variant="success"><p>Success: Add your content here.</p></div>\n` },
+    { variant: 'warning', icon: AlertTriangle, label: 'Warning', snippet: `<div data-callout data-variant="warning"><p>Warning: Add your content here.</p></div>\n` },
+    { variant: 'danger', icon: Flame, label: 'Danger', snippet: `<div data-callout data-variant="danger"><p>Danger: Add your content here.</p></div>\n` },
+    { variant: 'question', icon: HelpCircle, label: 'Question', snippet: `<div data-callout data-variant="question"><p>Question: Add your content here.</p></div>\n` },
+  ];
+
+  const formatting = [
+    { icon: Heading1, label: 'H1', snippet: '<h1>Heading 1</h1>\n' },
+    { icon: Heading2, label: 'H2', snippet: '<h2>Heading 2</h2>\n' },
+    { icon: Heading3, label: 'H3', snippet: '<h3>Heading 3</h3>\n' },
+    { icon: Bold, label: 'Bold', snippet: '<strong>Bold Text</strong>' },
+    { icon: Italic, label: 'Italic', snippet: '<em>Italic Text</em>' },
+    { icon: Link, label: 'Link', snippet: '<a href="https://example.com">Link Text</a>' },
+  ];
+
+  const elements = [
+    { icon: List, label: 'List', snippet: '<ul>\n  <li>List item 1</li>\n  <li>List item 2</li>\n</ul>\n' },
+    { icon: ListOrdered, label: 'Ordered List', snippet: '<ol>\n  <li>First item</li>\n  <li>Second item</li>\n</ol>\n' },
+    { icon: Quote, label: 'Quote', snippet: '<blockquote>\n  <p>This is a blockquote.</p>\n</blockquote>\n' },
+    { icon: Code, label: 'Code Block', snippet: '<pre><code>// Your code here</code></pre>\n' },
+    { icon: Minus, label: 'Separator', snippet: '<hr>\n' },
+    { icon: ImageIcon, label: 'Image', snippet: '<img src="https://picsum.photos/seed/1/800/400" alt="Placeholder image" />\n' },
+  ];
+  
+  const custom = [
+    { icon: EyeOff, label: 'Spoiler', snippet: '<details>\n  <summary>Spoiler Title</summary>\n  <p>Hidden content revealed here.</p>\n</details>\n' },
+    { icon: Milestone, label: 'Timeline', snippet: '<div data-timeline>\n  <div data-timeline-item>\n    <h4>Step 1</h4>\n    <p>Description for the first step.</p>\n  </div>\n  <div data-timeline-item>\n    <h4>Step 2</h4>\n    <p>Description for the second step.</p>\n  </div>\n</div>\n' },
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-md bg-muted/50">
-      <p className="text-sm font-medium self-center mr-2">Insert Callout:</p>
-      {callouts.map(({ variant, icon: Icon, label }) => (
-        <Button
-          key={variant}
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onInsert(`<div data-callout data-variant="${variant}" data-icon="${variant}"><p>${label}: Add your content here.</p></div>\n`)}
-        >
-          <Icon className="mr-2 h-4 w-4" />
-          {label}
-        </Button>
-      ))}
+    <div className="p-2 border rounded-md bg-muted/50 mb-2">
+      <Tabs defaultValue="callouts">
+        <TabsList className="grid w-full grid-cols-4 mb-2">
+          <TabsTrigger value="callouts">Callouts</TabsTrigger>
+          <TabsTrigger value="formatting">Formatting</TabsTrigger>
+          <TabsTrigger value="elements">Elements</TabsTrigger>
+          <TabsTrigger value="custom">Custom</TabsTrigger>
+        </TabsList>
+        <TabsContent value="callouts" className="flex flex-wrap gap-2">
+          {callouts.map(({ variant, icon: Icon, label, snippet }) => (
+            <SnippetButton key={variant} onInsert={onInsert} snippet={snippet}>
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </SnippetButton>
+          ))}
+        </TabsContent>
+        <TabsContent value="formatting" className="flex flex-wrap gap-2">
+           {formatting.map(({ icon: Icon, label, snippet }) => (
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </SnippetButton>
+          ))}
+        </TabsContent>
+        <TabsContent value="elements" className="flex flex-wrap gap-2">
+            {elements.map(({ icon: Icon, label, snippet }) => (
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </SnippetButton>
+          ))}
+        </TabsContent>
+         <TabsContent value="custom" className="flex flex-wrap gap-2">
+            {custom.map(({ icon: Icon, label, snippet }) => (
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </SnippetButton>
+          ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -156,7 +220,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
           <TabsContent value="edit">
-            <CalloutToolbar onInsert={handleInsertSnippet} />
+            <SnippetToolbar onInsert={handleInsertSnippet} />
             <Controller
               name="content"
               control={control}
