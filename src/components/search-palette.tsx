@@ -18,6 +18,7 @@ import { Badge } from './ui/badge';
 interface SearchPaletteProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    initialQuery?: string;
 }
 
 // Function to highlight search term in text
@@ -40,11 +41,17 @@ const highlightText = (text: string, query: string) => {
 };
 
 
-export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
-  const [query, setQuery] = useState('');
+export function SearchPalette({ open, onOpenChange, initialQuery = '' }: SearchPaletteProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Article[]>([]);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    if (initialQuery) {
+        setQuery(initialQuery);
+    }
+  }, [initialQuery, open]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -71,6 +78,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
 
   const handleSelect = (slug: string) => {
     onOpenChange(false);
+    setQuery('');
     router.push(`/article/${slug}`);
   }
 

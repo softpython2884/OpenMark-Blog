@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ArrowRight, Search, Clock } from 'lucide-react';
+import { PlusCircle, ArrowRight, Search, Clock, BookOpen, PenSquare } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,6 +31,12 @@ const createSnippet = (html: string, length: number) => {
 
 export function HomePageClient({ user, articles }: { user: User | null, articles: Article[] }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleTagClick = (tagName: string) => {
+    setSearchQuery(tagName);
+    setIsSearchOpen(true);
+  };
 
   const canCreate = user && ['ADMIN', 'EDITOR', 'AUTHOR'].includes(user.role);
 
@@ -112,10 +118,19 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
         )}
       </div>
 
-      {otherArticles.length === 0 && !heroArticle ? (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-          <h2 className="text-2xl font-semibold text-muted-foreground">No articles yet</h2>
-          <p className="text-muted-foreground mt-2">Be the first one to write something amazing!</p>
+      {articles.length === 0 ? (
+        <div className="text-center py-16 px-4 border-2 border-dashed rounded-lg bg-muted/20">
+          <PenSquare className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h2 className="mt-6 text-2xl font-semibold text-foreground">No articles published yet</h2>
+          <p className="mt-2 text-muted-foreground">Be the first one to write something amazing!</p>
+          {canCreate && (
+            <Button asChild className="mt-6">
+                <Link href="/editor">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Write your first post
+                </Link>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -151,7 +166,9 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                 <div className="w-full flex justify-between items-end">
                     <div className="flex flex-wrap gap-2">
                         {article.tags.map(tag => (
-                            <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
+                            <button key={tag.id} onClick={() => handleTagClick(tag.name)} className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
+                                <Badge variant="secondary" className="cursor-pointer hover:bg-primary/20">{tag.name}</Badge>
+                            </button>
                         ))}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -170,7 +187,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
           ))}
         </div>
       )}
-      <SearchPalette open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      <SearchPalette open={isSearchOpen} onOpenChange={setIsSearchOpen} initialQuery={searchQuery} />
     </div>
   );
 }
