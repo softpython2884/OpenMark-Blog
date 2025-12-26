@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-quill/lib/component.js b/node_modules/react-quill/lib/component.js
+index 4758414..a87754d 100644
+--- a/node_modules/react-quill/lib/component.js
++++ b/node_modules/react-quill/lib/component.js
+@@ -37,7 +37,7 @@
+ 	['findDOMNode', 'forwardRef', 'createContext'],
+ 	function(React) {
+ 		return {
+-			findDOMNode: require('react-dom').findDOMNode,
++			findDOMNode: function(ref) { return ref; },
+ 			forwardRef: React.forwardRef,
+ 			createContext: React.createContext,
+ 		};
