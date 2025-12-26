@@ -69,6 +69,23 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
     }
 }
 
+export async function getArticlesByAuthorId(authorId: number): Promise<Article[]> {
+    try {
+        const articlesStmt = db.prepare(`
+            SELECT 
+                id, title, slug, published_at as publishedAt
+            FROM articles
+            WHERE author_id = ?
+            ORDER BY published_at DESC
+        `);
+        const articles = articlesStmt.all(authorId) as any[];
+        return articles;
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch articles for author.');
+    }
+}
+
 
 export async function getCommentsByArticleId(articleId: number): Promise<Comment[]> {
     try {

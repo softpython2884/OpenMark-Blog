@@ -113,6 +113,34 @@ export async function saveArticle(prevState: any, formData: FormData) {
   redirect(`/article/${slug}`);
 }
 
+export async function deleteArticle(articleId: number) {
+    const user = await getUser();
+    if (!user) {
+        throw new Error('Vous devez être connecté pour supprimer un article.');
+    }
+
+    const article = db.prepare('SELECT author_id FROM articles WHERE id = ?').get(articleId) as { author_id: number } | undefined;
+
+    if (!article) {
+        throw new Error("L'article n'existe pas.");
+    }
+
+    if (article.author_id !== user.id && user.role !== 'ADMIN') {
+        throw new Error("Vous n'êtes pas autorisé à supprimer cet article.");
+    }
+
+    try {
+        db.prepare('DELETE FROM articles WHERE id = ?').run(articleId);
+        revalidatePath('/my-articles');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        console.error("Database error while deleting article:", e);
+        throw new Error("Erreur de base de données lors de la suppression de l'article.");
+    }
+}
+
+
 export async function addComment(articleId: number, content: string) {
     const user = await getUser();
     if (!user) throw new Error('You must be logged in to comment.');

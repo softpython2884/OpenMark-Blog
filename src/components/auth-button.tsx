@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/lib/definitions';
 import { logout } from '@/lib/auth';
-import { LogIn, LogOut, PlusCircle, User as UserIcon, Shield } from 'lucide-react';
+import { LogIn, LogOut, PlusCircle, User as UserIcon, Shield, BookUser } from 'lucide-react';
 
 export function AuthButton({ user }: { user: User | null }) {
   const handleLogout = async () => {
@@ -61,12 +61,20 @@ export function AuthButton({ user }: { user: User | null }) {
            </DropdownMenuItem>
         )}
         {canCreate && (
-          <DropdownMenuItem asChild>
-            <Link href="/editor">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              <span>New Post</span>
-            </Link>
-          </DropdownMenuItem>
+            <>
+                <DropdownMenuItem asChild>
+                    <Link href="/editor">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <span>New Post</span>
+                    </Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/my-articles">
+                        <BookUser className="mr-2 h-4 w-4" />
+                        <span>Mes Articles</span>
+                    </Link>
+                </DropdownMenuItem>
+            </>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
