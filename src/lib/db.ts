@@ -64,10 +64,14 @@ function initializeDb() {
     );
   `);
   
+  // Poor-man's migration: Add registration_date column if it doesn't exist
   try {
-    db.prepare('SELECT registration_date FROM users').get();
+    // This will throw an error if the column doesn't exist
+    db.prepare('SELECT registration_date FROM users LIMIT 1').get();
   } catch (e) {
-    db.exec('ALTER TABLE users ADD COLUMN registration_date DATETIME DEFAULT CURRENT_TIMESTAMP');
+    console.log("Applying migration: Adding 'registration_date' to users table.");
+    db.exec('ALTER TABLE users ADD COLUMN registration_date DATETIME');
+    // Set a default value for existing users
     db.exec('UPDATE users SET registration_date = CURRENT_TIMESTAMP WHERE registration_date IS NULL');
   }
 
