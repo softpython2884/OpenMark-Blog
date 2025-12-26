@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useActionState, useState, useTransition } from 'react';
+import { useActionState, useState, useTransition, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,10 +16,9 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { HtmlEditor } from './html-editor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
 
@@ -34,11 +33,41 @@ const ArticleFormSchema = z.object({
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
 
+const CalloutToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) => {
+  const callouts = [
+    { variant: 'note', icon: Info, label: 'Note' },
+    { variant: 'tip', icon: Zap, label: 'Tip' },
+    { variant: 'warning', icon: AlertTriangle, label: 'Warning' },
+    { variant: 'danger', icon: Flame, label: 'Danger' },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-md bg-muted/50">
+      <p className="text-sm font-medium self-center mr-2">Insert Callout:</p>
+      {callouts.map(({ variant, icon: Icon, label }) => (
+        <Button
+          key={variant}
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onInsert(`<div data-callout data-variant="${variant}" data-icon="${variant}"><p>${label}: Add your content here.</p></div>\n`)}
+        >
+          <Icon className="mr-2 h-4 w-4" />
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
+
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
   const [initialState, formAction] = useActionState(saveArticle, null);
   const [isAiPending, startAiTransition] = useTransition();
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const {
     register,
     handleSubmit,
@@ -93,6 +122,22 @@ export function EditorForm({ article }: { article: Article | null }) {
     });
   };
 
+  const handleInsertSnippet = (snippet: string) => {
+    const textarea = contentTextareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + snippet + text.substring(end);
+      setValue('content', newText, { shouldValidate: true });
+      // We need to delay setting focus and selection to allow React to re-render
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + snippet.length, start + snippet.length);
+      }, 0);
+    }
+  };
+
   return (
     <form action={formAction} className="space-y-8">
       <input type="hidden" {...register('id')} />
@@ -104,20 +149,23 @@ export function EditorForm({ article }: { article: Article | null }) {
       </div>
       
       <div>
-        <Label htmlFor="content" className="text-lg">Content</Label>
+        <Label htmlFor="content" className="text-lg">Content (HTML)</Label>
         <Tabs defaultValue="edit" className="w-full mt-1">
           <TabsList>
             <TabsTrigger value="edit">Edit</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
           <TabsContent value="edit">
-             <Controller
+            <CalloutToolbar onInsert={handleInsertSnippet} />
+            <Controller
               name="content"
               control={control}
               render={({ field }) => (
-                <HtmlEditor 
-                  value={field.value}
-                  onChange={field.onChange}
+                <Textarea
+                  {...field}
+                  ref={contentTextareaRef}
+                  placeholder="Write your article content here. You can use HTML tags."
+                  className="min-h-[400px] font-mono text-sm"
                 />
               )}
             />
