@@ -13,6 +13,7 @@ import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
 import { Progress } from './ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { CircularProgress } from './ui/circular-progress';
 
 
 const createSnippet = (html: string, length: number) => {
@@ -105,10 +106,28 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
       <header className="mb-12">
         <Card className="p-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            <Avatar className="h-32 w-32 border-4 border-primary">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+             <div className="relative flex flex-col items-center gap-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                       <div className="relative h-32 w-32">
+                          <CircularProgress value={user.levelProgress} className="absolute inset-0" />
+                          <Avatar className="h-28 w-28 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                              <AvatarImage src={user.avatarUrl} alt={user.name} />
+                              <AvatarFallback className="text-4xl">{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                       </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                        <p>{user.score} XP ({user.levelProgress}% to next level)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                {user.level !== undefined && (
+                   <span className="font-bold text-lg">Level {user.level}</span>
+                )}
+            </div>
+            
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-4">
                 <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
@@ -140,24 +159,6 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Profile
                     </Button>
-                )}
-                {user.score !== undefined && user.level !== undefined && (
-                    <div className="w-48 text-center">
-                        <div className="flex justify-between items-baseline mb-1 font-semibold">
-                            <span className="text-lg text-primary">Level {user.level}</span>
-                            <span className="text-sm text-muted-foreground">{user.score} XP</span>
-                        </div>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger className="w-full">
-                                    <Progress value={user.levelProgress} />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{user.levelProgress}% to next level</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
                 )}
             </div>
           </div>
