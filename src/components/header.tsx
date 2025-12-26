@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { SearchPalette } from './search-palette';
+import { ThemeToggle } from './theme-toggle';
 
 export function Header({ user }: { user: User | null }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -60,6 +61,7 @@ export function Header({ user }: { user: User | null }) {
                           </Link>
                       </Button>
                   )}
+                  <ThemeToggle />
                   <AuthButton user={user} />
               </div>
               </div>
