@@ -5,25 +5,25 @@ import { useEffect, useState } from 'react';
 import { Article } from '@/lib/definitions';
 import { Callout } from './ui/callout';
 import { Parser, ProcessNodeDefinitions } from 'html-to-react';
+import React from 'react';
 
 // We need a separate component to render the content to avoid hydration issues
 // with the editor and the rendered output. This component will sanitize the HTML
 // and render it safely.
 
-// This is a very basic parser to handle callouts. A more robust solution
-// might be needed for more complex HTML structures.
-const htmlToReactParser = new Parser();
-const processNodeDefinitions = new ProcessNodeDefinitions(require('react'));
+const processNodeDefinitions = new ProcessNodeDefinitions(React);
+const parser = new Parser();
+
 const processingInstructions = [
     {
         shouldProcessNode: (node: any) => {
             return node.attribs && (node.attribs['data-callout'] !== undefined);
         },
-        processNode: (node: any, children: any) => {
+        processNode: (node: any, children: any, index: number) => {
             const variant = node.attribs['data-variant'];
             const icon = node.attribs['data-icon'];
             return (
-                <Callout variant={variant} icon={icon}>
+                 <Callout key={index} variant={variant} icon={icon}>
                     {children}
                 </Callout>
             )
@@ -43,13 +43,13 @@ export function ArticleRenderer({ content }: { content: Article['content']}) {
     useEffect(() => {
         // Sanitize the HTML on the client-side to prevent XSS attacks.
         const clean = DOMPurify.sanitize(content, {
-            ADD_TAGS: ["div"],
-            ADD_ATTR: ['data-variant', 'data-icon', 'data-callout'],
+            ADD_TAGS: ['div', 'ul', 'ol', 'li', 'pre', 'code', 'blockquote', 'details', 'summary', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'a', 'hr', 'img'],
+            ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item', 'href', 'src', 'alt'],
         });
 
         // We need to parse the HTML string and convert it to React components
         // to properly handle our custom Callout component.
-        const reactElement = htmlToReactParser.parseWithInstructions(clean, () => true, processingInstructions);
+        const reactElement = parser.parseWithInstructions(clean, () => true, processingInstructions);
         setRenderedContent(reactElement);
 
     }, [content]);
