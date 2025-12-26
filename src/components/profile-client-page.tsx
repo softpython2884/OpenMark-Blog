@@ -123,19 +123,19 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                {user.level !== undefined && (
-                   <span className="font-bold text-lg">Level {user.level}</span>
-                )}
             </div>
             
             <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-4">
+              <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
                 <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
-                <div className="flex gap-2">
-                    {user.badges?.map(badge => <UserBadge key={badge.name} badge={badge} />)}
-                </div>
+                {user.level !== undefined && (
+                   <Badge variant="outline" className="text-lg">Level {user.level}</Badge>
+                )}
               </div>
-              <Badge variant="outline" className="mt-2 text-md">{user.role}</Badge>
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                <Badge variant="secondary" className="text-md">{user.role}</Badge>
+                {user.badges?.map(badge => <UserBadge key={badge.name} badge={badge} />)}
+              </div>
               <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mt-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
