@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ArrowRight, Search } from 'lucide-react';
+import { PlusCircle, ArrowRight, Search, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -143,20 +143,26 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                     </div>
                 </CardContent>
               </Link>
-              <CardFooter className="p-6 pt-0 flex flex-col items-start gap-4">
-                 <div className="flex flex-wrap gap-2">
-                    {article.tags.map(tag => (
-                        <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
-                    ))}
+              <CardFooter className="p-6 pt-2 flex flex-col items-start gap-4">
+                <div className="w-full flex justify-center text-xs text-muted-foreground items-center gap-1 mb-2">
+                    <Clock className="h-3 w-3" />
+                    <span>3 min read</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Avatar className="h-8 w-8">
-                        <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
-                        <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <span className="font-semibold text-foreground">{article.authorName}</span>
-                        <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                <div className="w-full flex justify-between items-end">
+                    <div className="flex flex-wrap gap-2">
+                        {article.tags.slice(0, 2).map(tag => (
+                            <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
+                            <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <span className="font-semibold text-foreground">{article.authorName}</span>
+                            <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        </div>
                     </div>
                 </div>
               </CardFooter>
