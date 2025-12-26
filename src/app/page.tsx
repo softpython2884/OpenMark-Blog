@@ -7,6 +7,18 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
+import DOMPurify from 'dompurify';
+
+// Function to create a text-only snippet from HTML content
+const createSnippet = (html: string, length: number) => {
+  const isBrowser = typeof window !== 'undefined';
+  const clean = isBrowser ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : html.replace(/<[^>]+>/g, '');
+  if (clean.length <= length) {
+    return clean;
+  }
+  return clean.substring(0, length);
+};
+
 
 export default async function Home() {
   const user = await getUser();
@@ -53,8 +65,11 @@ export default async function Home() {
                   </div>
                 </CardHeader>
               </Link>
-              <CardContent className="flex-grow">
-                <CardDescription>{article.summary || `${article.content.substring(0, 150)}...`}</CardDescription>
+              <CardContent className="flex-grow relative overflow-hidden">
+                <CardDescription className="h-24">
+                  {article.summary || createSnippet(article.content, 150)}
+                </CardDescription>
+                 <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card to-transparent pointer-events-none" />
               </CardContent>
               <CardFooter className="flex-wrap gap-2">
                 {article.tags.map(tag => (
