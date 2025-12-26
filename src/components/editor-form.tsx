@@ -163,12 +163,14 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
     const handleConvert = () => {
         let processedContent = rawContent;
 
+        // Always process custom callouts
         processedContent = processedContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):([\s\S]*?)\]/gi, (match, variant, text) => {
             const lowerVariant = variant.toLowerCase();
             const innerHtml = marked.parse(text.trim());
             return `<div data-callout data-variant="${lowerVariant}">${innerHtml}</div>`;
         });
         
+        // Convert from Markdown only if it wasn't rich text and doesn't look like HTML
         if (!wasPastedAsRichText && !rawContent.match(/<[a-z][\s\S]*>/i)) {
              processedContent = marked.parse(processedContent, { breaks: true, gfm: true });
         }
@@ -228,7 +230,7 @@ export function EditorForm({ article }: { article: Article | null }) {
     watch,
     control,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<ArticleFormData>({
     resolver: zodResolver(ArticleFormSchema),
     defaultValues: {
@@ -244,6 +246,20 @@ export function EditorForm({ article }: { article: Article | null }) {
 
   const contentValue = watch('content');
   const tagsValue = watch('tags');
+
+  // DEBUGGING: Log state changes
+  useEffect(() => {
+    if (state) {
+        console.log('Form state updated:', state);
+        if(state.message && !state.errors) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Saving Article',
+                description: state.message
+            });
+        }
+    }
+  }, [state, toast]);
 
   const handleGenerateSummary = () => {
     const content = watch('content');
@@ -318,17 +334,6 @@ export function EditorForm({ article }: { article: Article | null }) {
       }
     }
   };
-
-  useEffect(() => {
-    if (state?.message && !state.errors) {
-        toast({
-            variant: "destructive",
-            title: "Something went wrong",
-            description: state.message,
-        });
-    }
-  }, [state, toast]);
-
 
   return (
     <form action={formAction} className="space-y-8">
@@ -477,5 +482,4 @@ export function EditorForm({ article }: { article: Article | null }) {
     </form>
   );
 }
-
     
