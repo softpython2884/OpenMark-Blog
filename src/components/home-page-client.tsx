@@ -14,6 +14,7 @@ import { SearchPalette } from '@/components/search-palette';
 
 // Function to create a text-only snippet from HTML content
 const createSnippet = (html: string, length: number) => {
+  if (!html) return '';
   // Replace paragraph tags with newlines to preserve structure
   const textWithLineBreaks = html.replace(/<p>/gi, '').replace(/<\/p>/gi, '\n');
   
@@ -25,7 +26,7 @@ const createSnippet = (html: string, length: number) => {
   }
   // Find the last space within the length to avoid cutting words
   const truncatedText = cleanText.substring(0, length);
-  return truncatedText.substring(0, Math.min(truncatedText.length, truncatedText.lastIndexOf(' ')));
+  return truncatedText.substring(0, Math.min(truncatedText.length, truncatedText.lastIndexOf(' '))) + '...';
 };
 
 export function HomePageClient({ user, articles }: { user: User | null, articles: Article[] }) {
@@ -97,15 +98,17 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
         </Button>
       </section>
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="text-center mb-8">
         <h1 className="text-4xl font-headline font-bold">Latest Articles</h1>
         {canCreate && (
-          <Button asChild>
-            <Link href="/editor">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Post
-            </Link>
-          </Button>
+          <div className="mt-4">
+            <Button asChild>
+              <Link href="/editor">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Post
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -117,40 +120,45 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {otherArticles.map((article, index) => (
-            <Card key={article.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
-               <Link href={`/article/${article.slug}`} className="block">
-                <CardHeader>
-                  <div className="relative aspect-video w-full mb-4">
+            <Card key={article.id} className="flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+               <Link href={`/article/${article.slug}`} className="block group">
+                <CardHeader className="p-0">
+                  <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
                      <Image
                       src={article.imageUrl || placeholderImages[(index + 1) % placeholderImages.length].imageUrl}
                       alt={article.title}
                       fill
-                      className="rounded-t-lg object-cover"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                       data-ai-hint={placeholderImages[(index + 1) % placeholderImages.length].imageHint}
                     />
                   </div>
-                  <CardTitle className="font-headline text-2xl leading-tight">{article.title}</CardTitle>
-                  <div className="text-sm text-muted-foreground pt-2">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
+                </CardHeader>
+                <CardContent className="flex-grow p-6 relative">
+                    <CardTitle className="font-headline text-2xl leading-tight mb-3">{article.title}</CardTitle>
+                    <div className="relative h-24 overflow-hidden">
+                        <p className="text-muted-foreground text-sm">
+                        {article.summary || createSnippet(article.content, 150)}
+                        </p>
+                        <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-card via-card/80 to-transparent pointer-events-none" />
+                    </div>
+                </CardContent>
+              </Link>
+              <CardFooter className="p-6 pt-0 flex flex-col items-start gap-4">
+                 <div className="flex flex-wrap gap-2">
+                    {article.tags.map(tag => (
+                        <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
+                    ))}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Avatar className="h-8 w-8">
                         <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
                         <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span>By {article.authorName}</span> &middot; <span>{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </Avatar>
+                    <div>
+                        <span className="font-semibold text-foreground">{article.authorName}</span>
+                        <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
                     </div>
-                  </div>
-                </CardHeader>
-              </Link>
-              <CardContent className="flex-grow relative overflow-hidden">
-                <div className="h-24 whitespace-pre-wrap text-center">
-                  {article.summary || createSnippet(article.content, 250)}
                 </div>
-                 <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-card via-card/80 to-transparent pointer-events-none" />
-              </CardContent>
-              <CardFooter className="flex-wrap gap-2">
-                {article.tags.map(tag => (
-                  <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
-                ))}
               </CardFooter>
             </Card>
           ))}
