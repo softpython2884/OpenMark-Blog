@@ -7,16 +7,21 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
-import DOMPurify from 'dompurify';
 
 // Function to create a text-only snippet from HTML content
 const createSnippet = (html: string, length: number) => {
-  const isBrowser = typeof window !== 'undefined';
-  const clean = isBrowser ? DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }) : html.replace(/<[^>]+>/g, '');
-  if (clean.length <= length) {
-    return clean;
+  // Replace paragraph tags with newlines to preserve structure
+  const textWithLineBreaks = html.replace(/<p>/gi, '').replace(/<\/p>/gi, '\n');
+  
+  // Strip remaining HTML tags to get clean text
+  const cleanText = textWithLineBreaks.replace(/<[^>]+>/g, '').trim();
+
+  if (cleanText.length <= length) {
+    return cleanText;
   }
-  return clean.substring(0, length);
+  // Find the last space within the length to avoid cutting words
+  const truncatedText = cleanText.substring(0, length);
+  return truncatedText.substring(0, Math.min(truncatedText.length, truncatedText.lastIndexOf(' ')));
 };
 
 
@@ -66,7 +71,7 @@ export default async function Home() {
                 </CardHeader>
               </Link>
               <CardContent className="flex-grow relative overflow-hidden">
-                <CardDescription className="h-24">
+                <CardDescription className="h-24 whitespace-pre-wrap text-center">
                   {article.summary || createSnippet(article.content, 150)}
                 </CardDescription>
                  <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card to-transparent pointer-events-none" />
