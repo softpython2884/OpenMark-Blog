@@ -16,7 +16,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -33,13 +33,14 @@ const ArticleFormSchema = z.object({
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
 
-const SnippetButton = ({ onInsert, snippet, children }: { onInsert: (snippet: string) => void; snippet: string; children: React.ReactNode }) => (
+const SnippetButton = ({ onInsert, snippet, children, title }: { onInsert: (snippet: string) => void; snippet: string; children: React.ReactNode; title?: string }) => (
   <Button
     type="button"
     variant="outline"
     size="sm"
     onClick={() => onInsert(snippet)}
     className="flex-shrink-0"
+    title={title}
   >
     {children}
   </Button>
@@ -56,19 +57,24 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
   ];
 
   const formatting = [
-    { icon: Heading1, label: 'H1', snippet: '<h1>Heading 1</h1>\n' },
-    { icon: Heading2, label: 'H2', snippet: '<h2>Heading 2</h2>\n' },
-    { icon: Heading3, label: 'H3', snippet: '<h3>Heading 3</h3>\n' },
+    { icon: Heading1, label: 'H1', snippet: '<h1>Heading 1</h1>' },
+    { icon: Heading2, label: 'H2', snippet: '<h2>Heading 2</h2>' },
+    { icon: Heading3, label: 'H3', snippet: '<h3>Heading 3</h3>' },
     { icon: Bold, label: 'Bold', snippet: '<strong>Bold Text</strong>' },
     { icon: Italic, label: 'Italic', snippet: '<em>Italic Text</em>' },
     { icon: Link, label: 'Link', snippet: '<a href="https://example.com">Link Text</a>' },
+    { icon: Strikethrough, label: 'Strikethrough', title: 'Strikethrough', snippet: '<s>Strikethrough Text</s>' },
+    { icon: Code2, label: 'Code', title: 'Inline Code', snippet: '<code class="font-code">Inline Code</code>' },
+    { icon: Superscript, label: 'Superscript', title: 'Superscript', snippet: '<sup>Superscript</sup>' },
+    { icon: Subscript, label: 'Subscript', title: 'Subscript', snippet: '<sub>Subscript</sub>' },
+    { icon: Pilcrow, label: 'Overline', title: 'Overline', snippet: '<span class="overline">Overline Text</span>' },
   ];
 
   const elements = [
     { icon: List, label: 'List', snippet: '<ul>\n  <li>List item 1</li>\n  <li>List item 2</li>\n</ul>\n' },
     { icon: ListOrdered, label: 'Ordered List', snippet: '<ol>\n  <li>First item</li>\n  <li>Second item</li>\n</ol>\n' },
     { icon: Quote, label: 'Quote', snippet: '<blockquote>\n  <p>This is a blockquote.</p>\n</blockquote>\n' },
-    { icon: Code, label: 'Code Block', snippet: '<pre><code>// Your code here</code></pre>\n' },
+    { icon: Code, label: 'Code Block', snippet: '<pre><code class="font-code">// Your code here</code></pre>\n' },
     { icon: Minus, label: 'Separator', snippet: '<hr>\n' },
     { icon: ImageIcon, label: 'Image', snippet: '<img src="https://picsum.photos/seed/1/800/400" alt="Placeholder image" />\n' },
   ];
@@ -80,24 +86,24 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
 
   return (
     <div className="p-2 border rounded-md bg-muted/50 mb-2">
-      <Tabs defaultValue="callouts">
+      <Tabs defaultValue="formatting">
         <TabsList className="grid w-full grid-cols-4 mb-2">
-          <TabsTrigger value="callouts">Callouts</TabsTrigger>
           <TabsTrigger value="formatting">Formatting</TabsTrigger>
           <TabsTrigger value="elements">Elements</TabsTrigger>
+          <TabsTrigger value="callouts">Callouts</TabsTrigger>
           <TabsTrigger value="custom">Custom</TabsTrigger>
         </TabsList>
         <TabsContent value="callouts" className="flex flex-wrap gap-2">
           {callouts.map(({ variant, icon: Icon, label, snippet }) => (
-            <SnippetButton key={variant} onInsert={onInsert} snippet={snippet}>
+            <SnippetButton key={variant} onInsert={onInsert} snippet={snippet} title={label}>
               <Icon className="mr-2 h-4 w-4" />
               {label}
             </SnippetButton>
           ))}
         </TabsContent>
         <TabsContent value="formatting" className="flex flex-wrap gap-2">
-           {formatting.map(({ icon: Icon, label, snippet }) => (
-            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+           {formatting.map(({ icon: Icon, label, snippet, title }) => (
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet} title={title || label}>
               <Icon className="mr-2 h-4 w-4" />
               {label}
             </SnippetButton>
@@ -105,7 +111,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
         </TabsContent>
         <TabsContent value="elements" className="flex flex-wrap gap-2">
             {elements.map(({ icon: Icon, label, snippet }) => (
-            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet} title={label}>
               <Icon className="mr-2 h-4 w-4" />
               {label}
             </SnippetButton>
@@ -113,7 +119,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
         </TabsContent>
          <TabsContent value="custom" className="flex flex-wrap gap-2">
             {custom.map(({ icon: Icon, label, snippet }) => (
-            <SnippetButton key={label} onInsert={onInsert} snippet={snippet}>
+            <SnippetButton key={label} onInsert={onInsert} snippet={snippet} title={label}>
               <Icon className="mr-2 h-4 w-4" />
               {label}
             </SnippetButton>
@@ -192,13 +198,41 @@ export function EditorForm({ article }: { article: Article | null }) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const text = textarea.value;
-      const newText = text.substring(0, start) + snippet + text.substring(end);
-      setValue('content', newText, { shouldValidate: true });
-      // We need to delay setting focus and selection to allow React to re-render
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + snippet.length, start + snippet.length);
-      }, 0);
+      
+      // Check if there is selected text
+      if (start !== end) {
+        const selectedText = text.substring(start, end);
+        // Wrap selected text with the snippet, assuming the snippet is a simple tag like <strong>{selection}</strong>
+        // This is a simplified implementation. For complex snippets, this logic needs to be smarter.
+        const wrappedText = snippet.replace(/((?:<.*>))(.*?)((?:<\/.*>))/, `$1${selectedText}$3`);
+        
+        // A simple check if the replacement is valid for wrapping
+        if (wrappedText !== snippet) {
+             const newText = text.substring(0, start) + wrappedText + text.substring(end);
+             setValue('content', newText, { shouldValidate: true });
+             setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(start, start + wrappedText.length);
+             }, 0);
+        } else {
+             // Fallback for complex snippets or if wrapping fails: just insert
+             const newText = text.substring(0, start) + snippet + text.substring(end);
+            setValue('content', newText, { shouldValidate: true });
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(start + snippet.length, start + snippet.length);
+            }, 0);
+        }
+
+      } else {
+        // No text selected, just insert the snippet
+        const newText = text.substring(0, start) + snippet + text.substring(end);
+        setValue('content', newText, { shouldValidate: true });
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + snippet.length, start + snippet.length);
+        }, 0);
+      }
     }
   };
 
@@ -329,3 +363,5 @@ export function EditorForm({ article }: { article: Article | null }) {
     </form>
   );
 }
+
+    
