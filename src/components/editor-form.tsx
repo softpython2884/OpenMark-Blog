@@ -17,7 +17,6 @@ import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
 import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
@@ -32,7 +31,6 @@ const ArticleFormSchema = z.object({
   summary: z.string().optional(),
   imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   tags: z.string(),
-  status: z.enum(['draft', 'published']),
 });
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
@@ -240,7 +238,6 @@ export function EditorForm({ article }: { article: Article | null }) {
       summary: article?.summary || '',
       imageUrl: article?.imageUrl || '',
       tags: article?.tags.map(t => t.name).join(', ') || '',
-      status: article?.status || 'draft',
     },
   });
 
@@ -248,10 +245,10 @@ export function EditorForm({ article }: { article: Article | null }) {
   const tagsValue = watch('tags');
 
   useEffect(() => {
-    if (state?.message && !state.errors) {
+    if (state?.message) {
         toast({
-            variant: 'destructive',
-            title: 'Error Saving Article',
+            variant: state.errors ? 'destructive' : 'default',
+            title: state.errors ? 'Error Saving Article' : 'Success!',
             description: state.message
         });
     }
@@ -447,31 +444,6 @@ export function EditorForm({ article }: { article: Article | null }) {
       </div>
 
       <Separator />
-      
-      <div>
-        <Label className="text-lg">Status</Label>
-         <Controller
-          control={control}
-          name="status"
-          render={({ field }) => (
-            <RadioGroup
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              className="flex items-center gap-4 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="draft" id="draft" />
-                <Label htmlFor="draft">Draft</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="published" id="published" />
-                <Label htmlFor="published">Published</Label>
-              </div>
-            </RadioGroup>
-          )}
-        />
-        {state?.errors?.status && <p className="text-destructive text-sm mt-1">{state.errors.status[0]}</p>}
-      </div>
 
       <div className="flex justify-end gap-4">
         <Button type="submit" disabled={isSubmitting || isAiPending}>

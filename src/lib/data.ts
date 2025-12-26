@@ -9,7 +9,6 @@ export async function getPublishedArticles(): Promise<Article[]> {
         u.name as authorName, a.published_at as publishedAt
       FROM articles a
       JOIN users u ON a.author_id = u.id
-      WHERE a.status = 'published'
       ORDER BY a.published_at DESC
     `);
     const articles = articlesStmt.all() as any[];
@@ -38,7 +37,7 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
             SELECT 
                 a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId,
                 u.name as authorName, a.created_at as createdAt, a.updated_at as updatedAt,
-                a.published_at as publishedAt, a.status
+                a.published_at as publishedAt
             FROM articles a
             JOIN users u ON a.author_id = u.id
             WHERE a.slug = ?

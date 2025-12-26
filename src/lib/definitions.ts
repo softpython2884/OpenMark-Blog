@@ -25,7 +25,6 @@ export type Article = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
-  status: 'draft' | 'published';
   tags: Tag[];
   likes: number;
   isLiked?: boolean;

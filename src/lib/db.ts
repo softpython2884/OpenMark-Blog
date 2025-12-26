@@ -28,7 +28,6 @@ function initializeDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
-      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
       FOREIGN KEY (author_id) REFERENCES users(id)
     );
     

@@ -14,7 +14,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const user = await getUser();
   const article = await getArticleBySlug(params.slug, user?.id);
 
-  if (!article || (article.status === 'draft' && (!user || (user.id !== article.authorId && user.role !== 'ADMIN' && user.role !== 'EDITOR')))) {
+  if (!article) {
     notFound();
   }
 

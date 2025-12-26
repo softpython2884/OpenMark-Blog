@@ -17,7 +17,6 @@ const ArticleSchema = z.object({
   summary: z.string().optional(),
   imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   tags: z.string(), // Comma-separated
-  status: z.enum(['draft', 'published']),
 });
 
 function createSlug(title: string) {
@@ -30,8 +29,6 @@ function createSlug(title: string) {
 }
 
 export async function saveArticle(prevState: any, formData: FormData) {
-  console.log('--- saveArticle action called ---');
-
   const user = await getUser();
   if (!user || !['ADMIN', 'EDITOR', 'AUTHOR'].includes(user.role)) {
     return { message: 'Permission denied.' };
@@ -41,16 +38,13 @@ export async function saveArticle(prevState: any, formData: FormData) {
   const validatedFields = ArticleSchema.safeParse(rawData);
 
   if (!validatedFields.success) {
-    console.error('Zod validation failed:', validatedFields.error.flatten());
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Failed to save article due to validation errors.',
     };
   }
 
-  console.log('Validation successful. Data:', validatedFields.data);
-
-  const { id, title, content, summary, imageUrl, tags, status } = validatedFields.data;
+  const { id, title, content, summary, imageUrl, tags } = validatedFields.data;
   let slug = createSlug(title);
   
   try {
@@ -67,9 +61,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
             }
             
             const stmt = db.prepare(
-                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, status = ?, published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN datetime('now') ELSE published_at END, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now') WHERE id = ?`
             );
-            stmt.run(title, slug, content, summary || null, imageUrl || null, status, status, articleId);
+            stmt.run(title, slug, content, summary || null, imageUrl || null, articleId);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
         } else {
             const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ?').get(slug);
@@ -77,9 +71,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
                 slug = `${slug}-${Date.now()}`;
             }
             const stmt = db.prepare(
-                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, published_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
             );
-            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, status, status === 'published' ? new Date().toISOString() : null);
+            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id);
             articleId = Number(result.lastInsertRowid);
         }
 
@@ -99,7 +93,6 @@ export async function saveArticle(prevState: any, formData: FormData) {
         }
     })();
   } catch (e: any) {
-    console.error('Database Error during saveArticle:', e);
     return { message: `Database Error: ${e.message}` };
   }
 
