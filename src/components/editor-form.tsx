@@ -4,7 +4,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useActionState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,12 +16,11 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Eye, Code, Activity, AlarmClock, Album, Angry, Annoyed, Info, AlertTriangle, Zap, Flame } from 'lucide-react';
+import { Sparkles, Tags, Text } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Callout } from '@/components/ui/callout';
+import { HtmlEditor } from './html-editor';
 
 
 const ArticleFormSchema = z.object({
@@ -35,18 +33,6 @@ const ArticleFormSchema = z.object({
 });
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
-
-const admonitions = [
-  { name: 'Note', icon: Info, variant: 'note' },
-  { name: 'Tip', icon: Zap, variant: 'tip' },
-  { name: 'Warning', icon: AlertTriangle, variant: 'warning' },
-  { name: 'Danger', icon: Flame, variant: 'danger' },
-  { name: 'Activity', icon: Activity, variant: 'note' },
-  { name: 'Alarm', icon: AlarmClock, variant: 'note' },
-  { name: 'Album', icon: Album, variant: 'note' },
-  { name: 'Angry', icon: Angry, variant: 'warning' },
-  { name: 'Annoyed', icon: Annoyed, variant: 'warning' },
-];
 
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
@@ -106,12 +92,6 @@ export function EditorForm({ article }: { article: Article | null }) {
       toast({ title: 'AI Tags Suggested!', description: 'New tags have been added.' });
     });
   };
-  
-  const insertAdmonition = (name: string, variant: string) => {
-    const snippet = `\n<div data-callout="true" data-icon="${name.toLowerCase()}" data-variant="${variant}">\n\nYour content here...\n\n</div>\n`;
-    setValue('content', watch('content') + snippet);
-  };
-
 
   return (
     <form action={formAction} className="space-y-8">
@@ -123,59 +103,21 @@ export function EditorForm({ article }: { article: Article | null }) {
         {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
       </div>
       
-      <Tabs defaultValue="edit" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="edit">
-            <Code className="mr-2 h-4 w-4" />
-            Edit
-          </TabsTrigger>
-          <TabsTrigger value="preview">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="edit">
-            <Textarea 
-                id="content" 
-                {...register('content')} 
-                className="mt-1 font-mono h-[500px] rounded-t-none" 
-                placeholder="Write your article here. Use markdown for formatting."
+      <div>
+        <Label htmlFor="content" className="text-lg">Content</Label>
+        <Controller
+          name="content"
+          control={control}
+          render={({ field }) => (
+            <HtmlEditor 
+              value={field.value}
+              onChange={field.onChange}
+              className="mt-1 h-[500px]"
             />
-             {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
-        </TabsContent>
-        <TabsContent value="preview">
-          <Card className="mt-1 h-[500px] overflow-auto rounded-t-none">
-            <CardContent className="prose dark:prose-invert max-w-none p-4">
-              <ReactMarkdown
-                components={{
-                  div: ({ node, ...props }) => {
-                    if (node?.properties?.['data-callout'] === 'true') {
-                      const variant = node?.properties?.['data-variant'] as any;
-                      const icon = node?.properties?.['data-icon'] as string;
-                      return <Callout variant={variant} icon={icon} {...props} />;
-                    }
-                    return <div {...props} />;
-                  },
-                }}
-              >
-                {`# ${watch('title')}\n\n${contentValue}` || "Start typing to see a preview..."}
-              </ReactMarkdown>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-       <div>
-        <Label className="text-lg">Admonitions</Label>
-        <div className="flex flex-wrap items-center gap-2 mt-2">
-         {admonitions.map(({name, icon: Icon, variant}) => (
-          <Button key={name} type="button" variant="outline" size="sm" onClick={() => insertAdmonition(name, variant)}>
-            <Icon className="mr-2 h-4 w-4" />
-            {name}
-          </Button>
-        ))}
+          )}
+        />
+        {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
       </div>
-       </div>
 
       <Separator />
 
