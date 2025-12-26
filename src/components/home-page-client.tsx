@@ -43,6 +43,17 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
 
   const heroArticle = articles.length > 0 ? articles[0] : null;
   const otherArticles = articles.length > 1 ? articles.slice(1) : [];
+  
+  const formatReadingTime = (time: number) => {
+    if (time < 1) return "Less than 1 min";
+    if (time % 1 === 0) {
+        return `${time} min read`;
+    }
+    if ((time * 10) % 10 === 5) {
+        return `${time.toFixed(1)} min read`;
+    }
+    return `${time.toFixed(2)} min read`;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -167,16 +178,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                   <div className="w-full flex justify-center text-xs text-muted-foreground items-center gap-1 mb-2">
                       <Clock className="h-3 w-3" />
                       <span>
-                        {(() => {
-                          const time = calculateReadingTime(article.content);
-                          if (time < 1) return "Less than 1 min";
-                          const minutes = Math.floor(time);
-                          const quarters = Math.round((time - minutes) * 4);
-                          if (quarters === 0 || quarters === 4) {
-                            return `${minutes} min read`;
-                          }
-                          return `${minutes}.${quarters * 25} min read`;
-                        })()}
+                        {formatReadingTime(readingTime)}
                       </span>
                   </div>
                   <div className="w-full flex justify-between items-end">

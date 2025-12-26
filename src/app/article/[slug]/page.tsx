@@ -25,12 +25,14 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
   const formatReadingTime = (time: number) => {
     if (time < 1) return "Less than 1 min read";
-    const minutes = Math.floor(time);
-    const quarters = Math.round((time - minutes) * 4);
-    if (quarters === 0 || quarters === 4) {
-      return `${minutes} min read`;
+    if (time % 1 === 0) {
+        return `${time} min read`;
     }
-    return `${minutes}.${quarters * 25} min read`;
+    // For .5, toFixed(1) will be "x.5". For .25 or .75, it will be "x.3" or "x.8" but toFixed(2) is "x.25"
+    if ((time * 10) % 10 === 5) { // It's a .5 value
+        return `${time.toFixed(1)} min read`;
+    }
+    return `${time.toFixed(2)} min read`;
   }
 
   return (

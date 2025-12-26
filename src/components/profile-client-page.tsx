@@ -29,6 +29,17 @@ export function ProfileClientPage({ user, articles, loggedInUser }: { user: User
 
   const isOwnProfile = loggedInUser?.id === user.id;
 
+  const formatReadingTime = (time: number) => {
+    if (time < 1) return "Less than 1 min";
+    if (time % 1 === 0) {
+        return `${time} min read`;
+    }
+    if ((time * 10) % 10 === 5) {
+        return `${time.toFixed(1)} min read`;
+    }
+    return `${time.toFixed(2)} min read`;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-12">
@@ -104,15 +115,7 @@ export function ProfileClientPage({ user, articles, loggedInUser }: { user: User
                     <div className="w-full flex justify-center text-xs text-muted-foreground items-center gap-1 mb-2">
                         <Clock className="h-3 w-3" />
                          <span>
-                          {(() => {
-                            if (readingTime < 1) return "Less than 1 min";
-                            const minutes = Math.floor(readingTime);
-                            const quarters = Math.round((readingTime - minutes) * 4);
-                            if (quarters === 0 || quarters === 4) {
-                              return `${minutes} min read`;
-                            }
-                            return `${minutes}.${quarters * 25} min read`;
-                          })()}
+                          {formatReadingTime(readingTime)}
                         </span>
                     </div>
                     <div className="w-full flex justify-end">
