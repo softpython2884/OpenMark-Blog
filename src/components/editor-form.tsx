@@ -3,7 +3,7 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useActionState } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,14 +17,9 @@ import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
 import { Sparkles, Tags, Text } from 'lucide-react';
-import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
-
-const HtmlEditor = dynamic(() => import('./html-editor').then(mod => mod.HtmlEditor), { ssr: false });
-
+import { HtmlEditor } from './html-editor';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -115,7 +110,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             <HtmlEditor 
               value={field.value}
               onChange={field.onChange}
-              className="mt-1 h-[500px]"
+              className="mt-1"
             />
           )}
         />
