@@ -123,7 +123,8 @@ export async function getCommentsByArticleId(articleId: number): Promise<Comment
 export async function getAllUsers(): Promise<User[]> {
     try {
         const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate, bio, is_email_public as isEmailPublic FROM users');
-        return stmt.all() as User[];
+        const users = stmt.all() as any[];
+        return users.map(user => ({...user, isEmailPublic: user.isEmailPublic === 1}));
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch users.');
@@ -133,8 +134,9 @@ export async function getAllUsers(): Promise<User[]> {
 export async function getUserByName(name: string): Promise<User | null> {
     try {
         const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate, bio, is_email_public as isEmailPublic FROM users WHERE name = ?');
-        const user = stmt.get(name) as User | undefined;
-        return user || null;
+        const user = stmt.get(name) as any | undefined;
+        if (!user) return null;
+        return { ...user, isEmailPublic: user.isEmailPublic === 1 };
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch user.');

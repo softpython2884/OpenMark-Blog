@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useActionState, useEffect } from 'react';
@@ -31,6 +31,7 @@ export function EditProfileForm({ user }: { user: User }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(ProfileFormSchema),
@@ -78,15 +79,25 @@ export function EditProfileForm({ user }: { user: User }) {
             {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
           </div>
           
-          <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
+          <Controller
+            control={control}
+            name="isEmailPublic"
+            render={({ field }) => (
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
                   <Label htmlFor="isEmailPublic" className="text-base">Make Email Public</Label>
                   <p className="text-sm text-muted-foreground">
-                      Allow other users to see your email address on your profile.
+                    Allow other users to see your email address on your profile.
                   </p>
+                </div>
+                <Switch
+                  id="isEmailPublic"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
               </div>
-              <Switch id="isEmailPublic" {...register('isEmailPublic')} defaultChecked={user.isEmailPublic} />
-          </div>
+            )}
+          />
           
           {errors.isEmailPublic && <p className="text-sm text-destructive">{errors.isEmailPublic.message}</p>}
 

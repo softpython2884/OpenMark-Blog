@@ -355,7 +355,7 @@ const ProfileFormSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters long.'),
   avatarUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   bio: z.string().max(200, 'Bio cannot exceed 200 characters.').optional(),
-  isEmailPublic: z.preprocess((val) => val === 'on', z.boolean().default(false)),
+  isEmailPublic: z.boolean().default(false),
 });
 
 export async function updateProfile(prevState: any, formData: FormData) {
@@ -363,10 +363,15 @@ export async function updateProfile(prevState: any, formData: FormData) {
   if (!user) {
     return { errors: null, message: 'You must be logged in to update your profile.' };
   }
+  
+  const rawData = Object.fromEntries(formData.entries());
+  // Manually convert 'on'/'off' to boolean for zod parsing
+  const data = {
+    ...rawData,
+    isEmailPublic: rawData.isEmailPublic === 'on',
+  };
 
-  const validatedFields = ProfileFormSchema.safeParse(
-    Object.fromEntries(formData.entries())
-  );
+  const validatedFields = ProfileFormSchema.safeParse(data);
   
   if (!validatedFields.success) {
     return {
