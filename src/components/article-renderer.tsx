@@ -1,47 +1,59 @@
 'use client';
 
-import { useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { CalloutExtension } from '@/lib/tiptap-callout-extension';
 import DOMPurify from 'dompurify';
 import { useEffect, useState } from 'react';
 import { Article } from '@/lib/definitions';
+import { Callout } from './ui/callout';
+import { Parser, ProcessNodeDefinitions } from 'html-to-react';
 
 // We need a separate component to render the content to avoid hydration issues
 // with the editor and the rendered output. This component will sanitize the HTML
 // and render it safely.
+
+// This is a very basic parser to handle callouts. A more robust solution
+// might be needed for more complex HTML structures.
+const htmlToReactParser = new Parser();
+const processNodeDefinitions = new ProcessNodeDefinitions(require('react'));
+const processingInstructions = [
+    {
+        shouldProcessNode: (node: any) => {
+            return node.attribs && (node.attribs['data-callout'] !== undefined);
+        },
+        processNode: (node: any, children: any) => {
+            const variant = node.attribs['data-variant'];
+            const icon = node.attribs['data-icon'];
+            return (
+                <Callout variant={variant} icon={icon}>
+                    {children}
+                </Callout>
+            )
+        }
+    },
+    {
+        // Default processing
+        shouldProcessNode: () => true,
+        processNode: processNodeDefinitions.processDefaultNode
+    }
+];
+
+
 export function ArticleRenderer({ content }: { content: Article['content']}) {
-    const [sanitizedContent, setSanitizedContent] = useState('');
+    const [renderedContent, setRenderedContent] = useState<React.ReactNode>(null);
 
     useEffect(() => {
         // Sanitize the HTML on the client-side to prevent XSS attacks.
-        // We allow data-* attributes to support our custom callouts.
         const clean = DOMPurify.sanitize(content, {
-            ADD_ATTR: ['data-variant', 'data-icon'],
-            ADD_TAGS: ['div'],
+            ADD_TAGS: ["div"],
+            ADD_ATTR: ['data-variant', 'data-icon', 'data-callout'],
         });
-        setSanitizedContent(clean);
+
+        // We need to parse the HTML string and convert it to React components
+        // to properly handle our custom Callout component.
+        const reactElement = htmlToReactParser.parseWithInstructions(clean, () => true, processingInstructions);
+        setRenderedContent(reactElement);
+
     }, [content]);
 
-    const editor = useEditor({
-        editable: false,
-        content: sanitizedContent,
-        extensions: [
-            StarterKit,
-            CalloutExtension,
-        ],
-        editorProps: {
-            attributes: {
-                class: 'prose dark:prose-invert max-w-none',
-            },
-        },
-    });
-
-    if (!editor) {
-        return null;
-    }
-
-    // Using dangerouslySetInnerHTML is generally risky, but here it's safe
-    // because we have sanitized the HTML with DOMPurify.
-    return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+    // Using a div with a specific class to style the rendered content.
+    return <div className="prose dark:prose-invert max-w-none">{renderedContent}</div>;
 }
