@@ -68,11 +68,13 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                     </h1>
                     <div className="flex items-center gap-4 text-lg mb-6">
                         <div className="flex items-center gap-2">
-                           <Avatar className="h-8 w-8">
+                           <Link href={`/profile/${heroArticle.authorId}`} className="flex items-center gap-2 hover:underline">
+                            <Avatar className="h-8 w-8">
                                 <AvatarImage src={heroArticle.authorAvatarUrl} alt={heroArticle.authorName} />
                                 <AvatarFallback>{heroArticle.authorName?.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <span>{heroArticle.authorName}</span>
+                           </Link>
                         </div>
                         <span>&middot;</span>
                         <time dateTime={heroArticle.publishedAt!}>
@@ -164,7 +166,18 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                 <CardFooter className="p-6 pt-2 flex flex-col items-start gap-4">
                   <div className="w-full flex justify-center text-xs text-muted-foreground items-center gap-1 mb-2">
                       <Clock className="h-3 w-3" />
-                      <span>{readingTime} min read</span>
+                      <span>
+                        {(() => {
+                          const time = calculateReadingTime(article.content);
+                          if (time < 1) return "Less than 1 min";
+                          const minutes = Math.floor(time);
+                          const quarters = Math.round((time - minutes) * 4);
+                          if (quarters === 0 || quarters === 4) {
+                            return `${minutes} min read`;
+                          }
+                          return `${minutes}.${quarters * 25} min read`;
+                        })()}
+                      </span>
                   </div>
                   <div className="w-full flex justify-between items-end">
                       <div className="flex flex-wrap gap-2">
@@ -175,14 +188,16 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                           ))}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Avatar className="h-8 w-8">
-                              <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
-                              <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                              <span className="font-semibold text-foreground">{article.authorName}</span>
-                              <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                          </div>
+                          <Link href={`/profile/${article.authorId}`} className="hover:underline flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
+                                <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <span className="font-semibold text-foreground">{article.authorName}</span>
+                                <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                            </div>
+                          </Link>
                       </div>
                   </div>
                 </CardFooter>

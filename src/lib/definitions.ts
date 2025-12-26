@@ -6,6 +6,7 @@ export type User = {
   email: string;
   role: Role;
   avatarUrl: string;
+  registrationDate: string;
 };
 
 export type Tag = {

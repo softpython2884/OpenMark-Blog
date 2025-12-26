@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { addComment, getCommentsAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export function CommentSection({ articleId, user }: { articleId: number; user: User | null }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -91,13 +92,15 @@ export function CommentSection({ articleId, user }: { articleId: number; user: U
         ) : comments.length > 0 ? (
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-4">
-              <Avatar>
-                <AvatarImage src={comment.authorAvatarUrl} alt={comment.authorName} />
-                <AvatarFallback>{comment.authorName?.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <Link href={`/profile/${comment.authorId}`}>
+                <Avatar>
+                  <AvatarImage src={comment.authorAvatarUrl} alt={comment.authorName} />
+                  <AvatarFallback>{comment.authorName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </Link>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold">{comment.authorName}</span>
+                  <Link href={`/profile/${comment.authorId}`} className="font-semibold hover:underline">{comment.authorName}</Link>
                   <span className="text-xs text-muted-foreground">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </span>

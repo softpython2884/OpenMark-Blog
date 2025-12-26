@@ -34,7 +34,7 @@ export async function getUser(): Promise<(User & { userId: number }) | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number, iat: number, exp: number };
     
-    const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl FROM users WHERE id = ?');
+    const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate FROM users WHERE id = ?');
     const user = stmt.get(decoded.userId) as User | undefined;
 
     if (!user) {

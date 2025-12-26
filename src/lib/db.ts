@@ -14,7 +14,8 @@ function initializeDb() {
       email TEXT NOT NULL UNIQUE,
       password TEXT,
       role TEXT NOT NULL CHECK(role IN ('ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER')),
-      avatar_url TEXT
+      avatar_url TEXT,
+      registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS articles (
@@ -62,6 +63,14 @@ function initializeDb() {
       FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
     );
   `);
+  
+  try {
+    db.prepare('SELECT registration_date FROM users').get();
+  } catch (e) {
+    db.exec('ALTER TABLE users ADD COLUMN registration_date DATETIME DEFAULT CURRENT_TIMESTAMP');
+    db.exec('UPDATE users SET registration_date = CURRENT_TIMESTAMP WHERE registration_date IS NULL');
+  }
+
 
   // Seed initial data if users table is empty
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };

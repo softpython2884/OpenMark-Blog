@@ -9,6 +9,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
         u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
       FROM articles a
       JOIN users u ON a.author_id = u.id
+      WHERE a.published_at IS NOT NULL
       ORDER BY a.published_at DESC
     `);
     const articles = articlesStmt.all() as any[];
@@ -73,13 +74,26 @@ export async function getArticlesByAuthorId(authorId: number): Promise<Article[]
     try {
         const articlesStmt = db.prepare(`
             SELECT 
-                id, title, slug, published_at as publishedAt
-            FROM articles
-            WHERE author_id = ?
-            ORDER BY published_at DESC
+                a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
+                u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+            FROM articles a
+            JOIN users u ON a.author_id = u.id
+            WHERE a.author_id = ? AND a.published_at IS NOT NULL
+            ORDER BY a.published_at DESC
         `);
         const articles = articlesStmt.all(authorId) as any[];
-        return articles;
+
+        const tagsStmt = db.prepare(`
+            SELECT t.id, t.name 
+            FROM tags t
+            JOIN article_tags at ON t.id = at.tag_id
+            WHERE at.article_id = ?
+        `);
+
+        return articles.map(article => ({
+            ...article,
+            tags: tagsStmt.all(article.id) as Tag[],
+        }));
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch articles for author.');
@@ -107,13 +121,39 @@ export async function getCommentsByArticleId(articleId: number): Promise<Comment
 
 export async function getAllUsers(): Promise<User[]> {
     try {
-        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl FROM users');
+        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate FROM users');
         return stmt.all() as User[];
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch users.');
     }
 }
+
+export async function getUserById(id: number): Promise<User | null> {
+    try {
+        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate FROM users WHERE id = ?');
+        const user = stmt.get(id) as User | undefined;
+        return user || null;
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch user.');
+    }
+}
+
+export async function getUserProfileData(userId: number) {
+    try {
+        const user = await getUserById(userId);
+        if (!user) {
+            return null;
+        }
+        const articles = await getArticlesByAuthorId(userId);
+        return { user, articles };
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch user profile data.');
+    }
+}
+
 
 export async function getUsersForLogin(): Promise<Pick<User, 'id' | 'name' | 'role'>[]> {
     try {

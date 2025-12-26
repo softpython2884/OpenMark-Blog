@@ -11,6 +11,7 @@ import { placeholderImages } from '@/lib/placeholder-images';
 import { ArticleRenderer } from '@/components/article-renderer';
 import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const user = await getUser();
@@ -24,7 +25,12 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
   const formatReadingTime = (time: number) => {
     if (time < 1) return "Less than 1 min read";
-    return `${time} min read`;
+    const minutes = Math.floor(time);
+    const quarters = Math.round((time - minutes) * 4);
+    if (quarters === 0 || quarters === 4) {
+      return `${minutes} min read`;
+    }
+    return `${minutes}.${quarters * 25} min read`;
   }
 
   return (
@@ -39,11 +45,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <h1 className="text-4xl md:text-5xl font-headline font-bold leading-tight mb-4">{article.title}</h1>
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
-                <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span>{article.authorName}</span>
+              <Link href={`/profile/${article.authorId}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
+                  <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span>{article.authorName}</span>
+              </Link>
             </div>
             <span>&middot;</span>
             <time dateTime={article.publishedAt!}>{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
