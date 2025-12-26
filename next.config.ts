@@ -28,6 +28,22 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.google.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.bing.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.fbcdn.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.github.com',
+      },
     ],
   },
 };
