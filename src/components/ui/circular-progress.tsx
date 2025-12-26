@@ -9,16 +9,16 @@ interface CircularProgressProps extends React.SVGProps<SVGSVGElement> {
 
 const CircularProgress = React.forwardRef<SVGSVGElement, CircularProgressProps>(
   ({ className, value = 0, ...props }, ref) => {
-    const radius = 54; 
+    const radius = 48; 
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (value / 100) * circumference;
 
     return (
       <svg
         ref={ref}
-        width="128"
-        height="128"
-        viewBox="0 0 128 128"
+        width="112"
+        height="112"
+        viewBox="0 0 112 112"
         className={cn('transform -rotate-90', className)}
         {...props}
       >
@@ -28,8 +28,8 @@ const CircularProgress = React.forwardRef<SVGSVGElement, CircularProgressProps>(
           strokeWidth="6"
           fill="transparent"
           r={radius}
-          cx="64"
-          cy="64"
+          cx="56"
+          cy="56"
         />
         <circle
           className="text-primary transition-all duration-500"
@@ -40,8 +40,8 @@ const CircularProgress = React.forwardRef<SVGSVGElement, CircularProgressProps>(
           strokeLinecap="round"
           fill="transparent"
           r={radius}
-          cx="64"
-          cy="64"
+          cx="56"
+          cy="56"
         />
       </svg>
     );
