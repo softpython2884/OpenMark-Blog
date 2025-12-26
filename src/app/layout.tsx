@@ -28,8 +28,7 @@ export default async function RootLayout({
       <body className={cn('font-body antialiased h-full flex flex-col')}>
         <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
             disableTransitionOnChange
         >
           <SiteLayout user={user}>
