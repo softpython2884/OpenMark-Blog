@@ -1,0 +1,77 @@
+import { getArticleBySlug } from '@/lib/data';
+import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CommentSection } from '@/components/comment-section';
+import { getUser } from '@/lib/auth';
+import { Button } from '@/components/ui/button';
+import { ThumbsUp, MessageSquare, Share2 } from 'lucide-react';
+import { ArticleActions } from '@/components/article-actions';
+import Image from 'next/image';
+import { placeholderImages } from '@/lib/placeholder-images';
+
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const user = await getUser();
+  const article = await getArticleBySlug(params.slug, user?.id);
+
+  if (!article || (article.status === 'draft' && (!user || (user.id !== article.authorId && user.role !== 'ADMIN' && user.role !== 'EDITOR')))) {
+    notFound();
+  }
+
+  return (
+    <article className="container mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto">
+        <header className="mb-8">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {article.tags.map(tag => (
+              <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
+            ))}
+          </div>
+          <h1 className="text-4xl md:text-5xl font-headline font-bold leading-tight mb-4">{article.title}</h1>
+          <div className="flex items-center gap-4 text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span>{article.authorName}</span>
+            </div>
+            <span>&middot;</span>
+            <time dateTime={article.publishedAt!}>{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+          </div>
+        </header>
+
+        <div className="relative w-full aspect-video mb-8">
+            <Image 
+                src={placeholderImages[article.id % placeholderImages.length].imageUrl}
+                alt={article.title}
+                fill
+                className="object-cover rounded-lg"
+                data-ai-hint={placeholderImages[article.id % placeholderImages.length].imageHint}
+                priority
+            />
+        </div>
+
+        {article.summary && (
+          <div className="bg-accent/50 border-l-4 border-accent p-6 rounded-r-lg mb-8">
+            <h2 className="text-lg font-semibold mb-2">TL;DR</h2>
+            <p className="text-accent-foreground/80">{article.summary}</p>
+          </div>
+        )}
+
+        <div className="prose dark:prose-invert max-w-none text-lg">
+          <ReactMarkdown>{article.content}</ReactMarkdown>
+        </div>
+
+        <Separator className="my-12" />
+        
+        <ArticleActions articleId={article.id} initialLikes={article.likes} initialIsLiked={!!article.isLiked} />
+        
+        <Separator className="my-12" />
+
+        <CommentSection articleId={article.id} user={user} />
+      </div>
+    </article>
+  );
+}
