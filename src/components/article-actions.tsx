@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Button } from './ui/button';
 import { ThumbsUp, Share2, Twitter, Linkedin, Code2, Flag } from 'lucide-react';
 import { reportItem, toggleLike } from '@/lib/actions';
@@ -88,6 +88,15 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
   const { toast } = useToast();
   const [isEmbedDialogOpen, setIsEmbedDialogOpen] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [iframeCode, setIframeCode] = useState('');
+
+  useEffect(() => {
+    // This code runs only on the client, after hydration
+    const articleUrl = window.location.href;
+    const articleTitle = document.title;
+    setIframeCode(`<iframe src="${articleUrl}" width="100%" height="600" frameborder="0" allowfullscreen title="${articleTitle}"></iframe>`);
+  }, []);
+
 
   const handleLike = async () => {
     startTransition(async () => {
@@ -131,8 +140,6 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
         description: 'Article link has been copied to your clipboard.'
     });
   };
-
-  const iframeCode = `<iframe src="${typeof window !== 'undefined' ? window.location.href : ''}" width="100%" height="600" frameborder="0" allowfullscreen title="${typeof document !== 'undefined' ? document.title : ''}"></iframe>`;
 
   const handleCopyEmbedCode = () => {
       navigator.clipboard.writeText(iframeCode);
