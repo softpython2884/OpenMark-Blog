@@ -74,7 +74,7 @@ export default async function Home() {
                 <CardDescription className="h-24 whitespace-pre-wrap text-center">
                   {article.summary || createSnippet(article.content, 150)}
                 </CardDescription>
-                 <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                 <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-card via-card/80 to-transparent pointer-events-none" />
               </CardContent>
               <CardFooter className="flex-wrap gap-2">
                 {article.tags.map(tag => (
