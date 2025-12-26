@@ -13,7 +13,7 @@ export function Header({ user }: { user: User | null }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -25,7 +25,7 @@ export function Header({ user }: { user: User | null }) {
     <header 
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
-        isScrolled ? 'py-2' : 'py-4'
+        isScrolled ? 'py-2' : 'py-3'
       )}
     >
         <div className="absolute inset-0 w-full h-full bg-header-background backdrop-blur-sm border-b border-header-border"></div>
@@ -40,14 +40,11 @@ export function Header({ user }: { user: User | null }) {
             </div>
 
             <div className="flex-1 flex justify-center">
-                <Link href="/" className="flex flex-col items-center gap-1 group" prefetch={false}>
+                <Link href="/" className="flex items-center gap-2 group" prefetch={false}>
                     <BookOpen className={cn("text-primary transition-all duration-300", isScrolled ? "h-6 w-6" : "h-7 w-7")} />
-                    <div className="flex flex-col items-center">
-                        <span className={cn("font-headline font-bold tracking-tight transition-all duration-300", isScrolled ? "text-lg" : "text-xl")}>
-                            OPENMARK
-                        </span>
-                        <span className="text-xs text-muted-foreground font-medium group-hover:text-foreground transition-colors">Blog / Docs</span>
-                    </div>
+                    <span className={cn("font-headline font-bold tracking-tight transition-all duration-300", isScrolled ? "text-xl" : "text-2xl")}>
+                        OPENMARK
+                    </span>
                 </Link>
             </div>
             
