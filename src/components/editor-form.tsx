@@ -20,6 +20,8 @@ import { Sparkles, Tags, Text } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { HtmlEditor } from './html-editor';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { ArticleRenderer } from './article-renderer';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -103,17 +105,27 @@ export function EditorForm({ article }: { article: Article | null }) {
       
       <div>
         <Label htmlFor="content" className="text-lg">Content</Label>
-        <Controller
-          name="content"
-          control={control}
-          render={({ field }) => (
-            <HtmlEditor 
-              value={field.value}
-              onChange={field.onChange}
-              className="mt-1"
+        <Tabs defaultValue="edit" className="w-full mt-1">
+          <TabsList>
+            <TabsTrigger value="edit">Edit</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="edit">
+             <Controller
+              name="content"
+              control={control}
+              render={({ field }) => (
+                <HtmlEditor 
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
-          )}
-        />
+          </TabsContent>
+          <TabsContent value="preview" className="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[400px]">
+            <ArticleRenderer content={contentValue} />
+          </TabsContent>
+        </Tabs>
         {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
       </div>
 
