@@ -22,6 +22,7 @@ import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Callout } from '@/components/ui/callout';
 
 
 const ArticleFormSchema = z.object({
@@ -145,7 +146,20 @@ export function EditorForm({ article }: { article: Article | null }) {
         <TabsContent value="preview">
           <Card className="mt-1 h-[500px] overflow-auto rounded-t-none">
             <CardContent className="prose dark:prose-invert max-w-none p-4">
-              <ReactMarkdown>{contentValue || "Start typing to see a preview..."}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  div: ({ node, ...props }) => {
+                    if (node?.properties?.['data-callout'] === 'true') {
+                      const variant = node?.properties?.['data-variant'] as any;
+                      const icon = node?.properties?.['data-icon'] as string;
+                      return <Callout variant={variant} icon={icon} {...props} />;
+                    }
+                    return <div {...props} />;
+                  },
+                }}
+              >
+                {`# ${watch('title')}\n\n${contentValue}` || "Start typing to see a preview..."}
+              </ReactMarkdown>
             </CardContent>
           </Card>
         </TabsContent>
