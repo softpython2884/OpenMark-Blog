@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { marked } from 'marked';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -137,29 +138,19 @@ function ImportDialog({ onImport }: { onImport: (content: string) => void }) {
   const { toast } = useToast();
 
   const handleConvert = () => {
-    let htmlContent = rawContent;
+    let processedContent = rawContent;
 
-    // Custom Callout Syntax: [VARIANT:Text]
-    htmlContent = htmlContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):(.*?)\]/gi, (match, variant, text) => {
+    // First, handle custom callout syntax: [VARIANT:Text]
+    processedContent = processedContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):([\s\S]*?)\]/gi, (match, variant, text) => {
         const lowerVariant = variant.toLowerCase();
         const capitalizedVariant = variant.charAt(0).toUpperCase() + variant.slice(1).toLowerCase();
-        return `<div data-callout data-variant="${lowerVariant}"><p>${capitalizedVariant}: ${text.trim()}</p></div>`;
+        // Use marked to parse inner content of callout
+        const innerHtml = marked.parse(text.trim());
+        return `<div data-callout data-variant="${lowerVariant}"><p>${capitalizedVariant}:</p>${innerHtml}</div>`;
     });
     
-    // Naive Markdown to HTML conversion
-    // Headers
-    htmlContent = htmlContent.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    htmlContent = htmlContent.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    htmlContent = htmlContent.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    // Bold
-    htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-    htmlContent = htmlContent.replace(/__(.*?)__/gim, '<strong>$1</strong>');
-    // Italic
-    htmlContent = htmlContent.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-    htmlContent = htmlContent.replace(/_(.*?)_/gim, '<em>$1</em>');
-    // Newlines to paragraphs
-    htmlContent = htmlContent.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
-
+    // Now, convert the rest of the content from Markdown to HTML
+    const htmlContent = marked.parse(processedContent, { breaks: true, gfm: true });
 
     onImport(htmlContent);
     toast({ title: 'Content Imported!', description: 'The raw text has been converted to HTML.' });
@@ -454,5 +445,3 @@ export function EditorForm({ article }: { article: Article | null }) {
     </form>
   );
 }
-
-    
