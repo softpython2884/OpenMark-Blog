@@ -40,7 +40,7 @@ export default async function Home() {
                 <CardHeader>
                   <div className="relative aspect-video w-full mb-4">
                      <Image
-                      src={placeholderImages[index % placeholderImages.length].imageUrl}
+                      src={article.imageUrl || placeholderImages[index % placeholderImages.length].imageUrl}
                       alt={article.title}
                       fill
                       className="rounded-t-lg object-cover"

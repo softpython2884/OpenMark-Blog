@@ -23,6 +23,7 @@ function initializeDb() {
       slug TEXT NOT NULL UNIQUE,
       content TEXT NOT NULL,
       summary TEXT,
+      image_url TEXT,
       author_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

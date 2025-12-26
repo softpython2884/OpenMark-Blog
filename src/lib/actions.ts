@@ -15,6 +15,7 @@ const ArticleSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   content: z.string().min(10, 'Content must be at least 10 characters.'),
   summary: z.string().optional(),
+  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   tags: z.string(), // Comma-separated
   status: z.enum(['draft', 'published']),
 });
@@ -43,7 +44,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
     };
   }
 
-  const { id, title, content, summary, tags, status } = validatedFields.data;
+  const { id, title, content, summary, imageUrl, tags, status } = validatedFields.data;
   const slug = createSlug(title);
   
   try {
@@ -53,9 +54,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
             // Update existing article
             articleId = Number(id);
             const stmt = db.prepare(
-                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, status = ?, published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN datetime('now') ELSE published_at END, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, status = ?, published_at = CASE WHEN ? = 'published' AND published_at IS NULL THEN datetime('now') ELSE published_at END, updated_at = datetime('now') WHERE id = ?`
             );
-            stmt.run(title, slug, content, summary || null, status, status, articleId);
+            stmt.run(title, slug, content, summary || null, imageUrl || null, status, status, articleId);
 
             // TODO: permission check if user can edit this article
             
@@ -64,9 +65,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
         } else {
             // Create new article
             const stmt = db.prepare(
-                `INSERT INTO articles (title, slug, content, summary, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
             );
-            const result = stmt.run(title, slug, content, summary || null, user.id, status, status === 'published' ? new Date().toISOString() : null);
+            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, status, status === 'published' ? new Date().toISOString() : null);
             articleId = Number(result.lastInsertRowid);
         }
 

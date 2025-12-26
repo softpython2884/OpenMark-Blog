@@ -16,7 +16,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -27,6 +27,7 @@ const ArticleFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
   content: z.string().min(10, 'Content must be at least 10 characters.'),
   summary: z.string().optional(),
+  imageUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
   tags: z.string(),
   status: z.enum(['draft', 'published']),
 });
@@ -152,6 +153,7 @@ export function EditorForm({ article }: { article: Article | null }) {
       title: article?.title || '',
       content: article?.content || '',
       summary: article?.summary || '',
+      imageUrl: article?.imageUrl || '',
       tags: article?.tags.map(t => t.name).join(', ') || '',
       status: article?.status || 'draft',
     },
@@ -244,6 +246,15 @@ export function EditorForm({ article }: { article: Article | null }) {
         <Label htmlFor="title" className="text-lg">Title</Label>
         <Input id="title" {...register('title')} className="mt-1 text-2xl h-12" />
         {errors.title && <p className="text-destructive text-sm mt-1">{errors.title.message}</p>}
+      </div>
+
+      <div>
+        <Label htmlFor="imageUrl" className="text-lg">Image URL</Label>
+        <div className="flex items-center gap-2 mt-1">
+          <PictureInPicture className="h-5 w-5 text-muted-foreground" />
+          <Input id="imageUrl" {...register('imageUrl')} placeholder="https://..." />
+        </div>
+        {errors.imageUrl && <p className="text-destructive text-sm mt-1">{errors.imageUrl.message}</p>}
       </div>
       
       <div>

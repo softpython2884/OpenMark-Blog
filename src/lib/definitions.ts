@@ -19,6 +19,7 @@ export type Article = {
   slug: string;
   content: string;
   summary: string | null;
+  imageUrl: string | null;
   authorId: number;
   authorName?: string;
   createdAt: string;

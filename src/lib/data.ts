@@ -5,7 +5,7 @@ export async function getPublishedArticles(): Promise<Article[]> {
   try {
     const articlesStmt = db.prepare(`
       SELECT 
-        a.id, a.title, a.slug, a.content, a.summary, a.author_id as authorId, 
+        a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
         u.name as authorName, a.published_at as publishedAt
       FROM articles a
       JOIN users u ON a.author_id = u.id
@@ -36,7 +36,7 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
     try {
         const articleStmt = db.prepare(`
             SELECT 
-                a.id, a.title, a.slug, a.content, a.summary, a.author_id as authorId,
+                a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId,
                 u.name as authorName, a.created_at as createdAt, a.updated_at as updatedAt,
                 a.published_at as publishedAt, a.status
             FROM articles a

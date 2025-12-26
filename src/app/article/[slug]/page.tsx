@@ -42,7 +42,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
         <div className="relative w-full aspect-video mb-8">
             <Image 
-                src={placeholderImages[article.id % placeholderImages.length].imageUrl}
+                src={article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl}
                 alt={article.title}
                 fill
                 className="object-cover rounded-lg"
