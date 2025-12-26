@@ -13,6 +13,8 @@ export type User = {
   role: Role;
   avatarUrl: string;
   registrationDate: string;
+  bio?: string | null;
+  isEmailPublic?: boolean;
   score?: number;
   level?: number;
   levelProgress?: number;

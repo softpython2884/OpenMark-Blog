@@ -5,13 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star, Award } from 'lucide-react';
+import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
-import { Progress } from './ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { CircularProgress } from './ui/circular-progress';
 
@@ -128,7 +127,7 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
                 <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
-                {user.level !== undefined && (
+                 {user.level !== undefined && (
                    <Badge variant="outline" className="text-lg">Level {user.level}</Badge>
                 )}
               </div>
@@ -136,6 +135,9 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                 <Badge variant="secondary" className="text-md">{user.role}</Badge>
                 {user.badges?.map(badge => <UserBadge key={badge.name} badge={badge} />)}
               </div>
+               {user.bio && (
+                  <p className="text-muted-foreground text-center md:text-left max-w-prose mt-4">{user.bio}</p>
+                )}
               <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mt-4 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -145,19 +147,21 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                   <Calendar className="h-4 w-4" />
                   <span>Joined on {new Date(user.registrationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
-                {isOwnProfile && (
+                {(isOwnProfile || user.isEmailPublic) && (
                   <div className="flex items-center gap-2">
                     <AtSign className="h-4 w-4" />
-                    <span>{user.email}</span>
+                    <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex flex-col gap-4 items-center">
                  {isOwnProfile && (
-                    <Button variant="outline">
+                    <Button variant="outline" asChild>
+                      <Link href="/profile/edit">
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Profile
+                      </Link>
                     </Button>
                 )}
             </div>

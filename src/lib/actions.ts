@@ -223,6 +223,14 @@ export async function signup(prevState: any, formData: FormData) {
     let userRole: Role;
 
     try {
+        const existingName = db.prepare('SELECT id FROM users WHERE name = ?').get(name);
+        if (existingName) {
+            return {
+                errors: { name: ['This name is already taken. Please choose another.'] },
+                message: 'This name is already taken. Please choose another.' 
+            };
+        }
+        
         const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
         if (existingUser) {
             return { message: 'A user with this email already exists.' };
@@ -341,4 +349,53 @@ export async function searchArticles(query: string): Promise<Article[]> {
     console.error('Search Database Error:', err);
     throw new Error('Failed to search articles.');
   }
+}
+
+const ProfileFormSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters long.'),
+  avatarUrl: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
+  bio: z.string().max(200, 'Bio cannot exceed 200 characters.').optional(),
+  isEmailPublic: z.preprocess((val) => val === 'on', z.boolean().default(false)),
+});
+
+export async function updateProfile(prevState: any, formData: FormData) {
+  const user = await getUser();
+  if (!user) {
+    return { errors: null, message: 'You must be logged in to update your profile.' };
+  }
+
+  const validatedFields = ProfileFormSchema.safeParse(
+    Object.fromEntries(formData.entries())
+  );
+  
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Invalid data provided.',
+    };
+  }
+  
+  const { name, avatarUrl, bio, isEmailPublic } = validatedFields.data;
+
+  try {
+    if (name !== user.name) {
+      const existingUser = db.prepare('SELECT id FROM users WHERE name = ? AND id != ?').get(name, user.id);
+      if (existingUser) {
+        return {
+          errors: { name: ['This name is already taken.'] },
+          message: 'This name is already taken. Please choose another.',
+        };
+      }
+    }
+
+    db.prepare(
+      'UPDATE users SET name = ?, avatar_url = ?, bio = ?, is_email_public = ? WHERE id = ?'
+    ).run(name, avatarUrl, bio, isEmailPublic ? 1 : 0, user.id);
+  } catch (e: any) {
+    return { errors: null, message: `Database error: ${e.message}` };
+  }
+
+  revalidatePath(`/profile/${encodeURIComponent(user.name)}`); // Revalidate old profile page
+  revalidatePath(`/profile/${encodeURIComponent(name)}`); // Revalidate new profile page
+  redirect(`/profile/${encodeURIComponent(name)}`);
 }

@@ -10,12 +10,14 @@ function initializeDb() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
+      name TEXT NOT NULL UNIQUE,
       email TEXT NOT NULL UNIQUE,
       password TEXT,
       role TEXT NOT NULL CHECK(role IN ('ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER')),
       avatar_url TEXT,
-      registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
+      registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      bio TEXT,
+      is_email_public INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS articles (
@@ -64,17 +66,78 @@ function initializeDb() {
     );
   `);
   
-  // Poor-man's migration: Add registration_date column if it doesn't exist
-  try {
-    // This will throw an error if the column doesn't exist
-    db.prepare('SELECT registration_date FROM users LIMIT 1').get();
-  } catch (e) {
+  // Poor-man's migration: Add columns if they don't exist
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const columnNames = columns.map((col: any) => col.name);
+
+  if (!columnNames.includes('registration_date')) {
     console.log("Applying migration: Adding 'registration_date' to users table.");
     db.exec('ALTER TABLE users ADD COLUMN registration_date DATETIME');
-    // Set a default value for existing users
     db.exec('UPDATE users SET registration_date = CURRENT_TIMESTAMP WHERE registration_date IS NULL');
   }
 
+  if (!columnNames.includes('bio')) {
+    console.log("Applying migration: Adding 'bio' to users table.");
+    db.exec('ALTER TABLE users ADD COLUMN bio TEXT');
+  }
+
+  if (!columnNames.includes('is_email_public')) {
+    console.log("Applying migration: Adding 'is_email_public' to users table.");
+    db.exec('ALTER TABLE users ADD COLUMN is_email_public INTEGER DEFAULT 0');
+  }
+
+  // Handle unique constraint on 'name' for existing data
+  if (columnNames.includes('name')) {
+      const duplicateNames = db.prepare(`
+          SELECT name FROM users GROUP BY name HAVING COUNT(id) > 1
+      `).all() as { name: string }[];
+
+      if (duplicateNames.length > 0) {
+          console.log("Applying migration: Fixing duplicate user names.");
+          const updateUser = db.prepare('UPDATE users SET name = ? WHERE id = ?');
+          for (const item of duplicateNames) {
+              const users = db.prepare('SELECT id FROM users WHERE name = ? ORDER BY id').all(item.name) as { id: number }[];
+              users.forEach((user, index) => {
+                  if (index > 0) { // Keep the first user's name
+                      const newName = `${item.name}${index + 1}`;
+                      updateUser.run(newName, user.id);
+                      console.log(`Updating user ID ${user.id}: name '${item.name}' -> '${newName}'`);
+                  }
+              });
+          }
+      }
+      
+      // Re-create table with UNIQUE constraint on name.
+      // This is the SQLite way to add a constraint.
+      const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+      if(userCount.count > 0) {
+        try {
+          // This will fail if the constraint is already there, which is fine.
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS users_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL UNIQUE,
+              email TEXT NOT NULL UNIQUE,
+              password TEXT,
+              role TEXT NOT NULL CHECK(role IN ('ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER')),
+              avatar_url TEXT,
+              registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+              bio TEXT,
+              is_email_public INTEGER DEFAULT 0
+            );
+          `);
+          db.exec('INSERT INTO users_new SELECT id, name, email, password, role, avatar_url, registration_date, bio, is_email_public FROM users;');
+          db.exec('DROP TABLE users;');
+          db.exec('ALTER TABLE users_new RENAME TO users;');
+          console.log("Successfully applied UNIQUE constraint to user names.");
+        } catch(e: any) {
+          if (!e.message.includes('already exists')) {
+            console.error("Failed to apply UNIQUE constraint migration:", e);
+          }
+           db.exec('DROP TABLE IF EXISTS users_new;');
+        }
+      }
+  }
 
   // Seed initial data if users table is empty
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
@@ -83,14 +146,13 @@ function initializeDb() {
       INSERT INTO users (name, email, role, avatar_url, password) VALUES (?, ?, ?, ?, ?)
     `);
     
-    // Hash passwords
     const adminPassword = bcrypt.hashSync('admin', 10);
     const authorPassword = bcrypt.hashSync('author', 10);
     const readerPassword = bcrypt.hashSync('reader', 10);
 
-    insertUser.run('Admin User', 'admin@example.com', 'ADMIN', placeholderImages[0].imageUrl, adminPassword);
-    insertUser.run('Author User', 'author@example.com', 'AUTHOR', placeholderImages[1].imageUrl, authorPassword);
-    insertUser.run('Reader User', 'reader@example.com', 'READER', placeholderImages[2].imageUrl, readerPassword);
+    insertUser.run('Admin', 'admin@example.com', 'ADMIN', placeholderImages[0].imageUrl, adminPassword);
+    insertUser.run('Author', 'author@example.com', 'AUTHOR', placeholderImages[1].imageUrl, authorPassword);
+    insertUser.run('Reader', 'reader@example.com', 'READER', placeholderImages[2].imageUrl, readerPassword);
     console.log('Database seeded with initial users.');
   }
 }

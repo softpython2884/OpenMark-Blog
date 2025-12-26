@@ -122,7 +122,7 @@ export async function getCommentsByArticleId(articleId: number): Promise<Comment
 
 export async function getAllUsers(): Promise<User[]> {
     try {
-        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate FROM users');
+        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate, bio, is_email_public as isEmailPublic FROM users');
         return stmt.all() as User[];
     } catch (err) {
         console.error('Database Error:', err);
@@ -130,10 +130,10 @@ export async function getAllUsers(): Promise<User[]> {
     }
 }
 
-export async function getUserById(id: number): Promise<User | null> {
+export async function getUserByName(name: string): Promise<User | null> {
     try {
-        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate FROM users WHERE id = ?');
-        const user = stmt.get(id) as User | undefined;
+        const stmt = db.prepare('SELECT id, name, email, role, avatar_url as avatarUrl, registration_date as registrationDate, bio, is_email_public as isEmailPublic FROM users WHERE name = ?');
+        const user = stmt.get(name) as User | undefined;
         return user || null;
     } catch (err) {
         console.error('Database Error:', err);
@@ -227,16 +227,16 @@ export async function getTopArticlesByAuthorId(authorId: number): Promise<Array<
 }
 
 
-export async function getUserProfileData(userId: number) {
+export async function getUserProfileData(userName: string) {
     try {
-        const user = await getUserById(userId);
+        const user = await getUserByName(userName);
         if (!user) {
             return null;
         }
 
-        const articles = await getArticlesByAuthorId(userId);
-        const topArticles = await getTopArticlesByAuthorId(userId);
-        const gamificationData = await calculateGamificationData(userId);
+        const articles = await getArticlesByAuthorId(user.id);
+        const topArticles = await getTopArticlesByAuthorId(user.id);
+        const gamificationData = await calculateGamificationData(user.id);
         
         const userWithGamification: User = {
             ...user,
