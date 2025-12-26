@@ -32,7 +32,10 @@ const ArticleFormSchema = z.object({
   imageUrl: z.string()
     .url('Please enter a valid URL.')
     .optional()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .refine(url => !url || !url.includes('imgur.com') || url.includes('i.imgur.com'), {
+        message: "Invalid Imgur link. Please use the direct image link (starting with i.imgur.com). Right-click the image on Imgur and select 'Copy Image Address'.",
+    }),
   tags: z.string(),
 });
 
@@ -351,6 +354,9 @@ export function EditorForm({ article }: { article: Article | null }) {
           <PictureInPicture className="h-5 w-5 text-muted-foreground" />
           <Input id="imageUrl" {...register('imageUrl')} placeholder="https://..." />
         </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Tip: For Imgur links, right-click the image and 'Copy Image Address' to get a direct link (starting with i.imgur.com).
+        </p>
         {errors.imageUrl && <p className="text-destructive text-sm mt-1">{errors.imageUrl.message}</p>}
       </div>
       

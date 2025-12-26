@@ -18,7 +18,10 @@ const ArticleSchema = z.object({
   imageUrl: z.string()
     .url('Please enter a valid URL.')
     .optional()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .refine(url => !url || !url.includes('imgur.com') || url.includes('i.imgur.com'), {
+        message: "Invalid Imgur link. Please use the direct image link (starting with i.imgur.com). Right-click the image on Imgur and select 'Copy Image Address'.",
+    }),
   tags: z.string(), // Comma-separated
 });
 
@@ -66,7 +69,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
             }
             
             const stmt = db.prepare(
-                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now'), published_at = datetime('now') WHERE id = ?`
             );
             stmt.run(title, slug, content, summary || null, imageUrl || null, articleId);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
