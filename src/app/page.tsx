@@ -1,10 +1,11 @@
-import { getPublishedArticles } from '@/lib/data';
+import { getPublishedArticles, getFollowedArticles } from '@/lib/data';
 import { getUser } from '@/lib/auth';
 import { HomePageClient } from '@/components/home-page-client';
 
 export default async function Home() {
   const user = await getUser();
   const articles = await getPublishedArticles();
+  const followedArticles = user ? await getFollowedArticles(user.id) : [];
 
-  return <HomePageClient user={user} articles={articles} />;
+  return <HomePageClient user={user} articles={articles} followedArticles={followedArticles} />;
 }

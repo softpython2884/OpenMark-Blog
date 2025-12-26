@@ -37,7 +37,7 @@ export default async function ProfilePage({ params }: { params: { name: string }
         notFound();
     }
     
-    const profileData = await getUserProfileData(userName);
+    const profileData = await getUserProfileData(userName, loggedInUser?.id);
 
     if (!profileData) {
         notFound();

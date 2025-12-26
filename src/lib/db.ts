@@ -66,6 +66,14 @@ function initializeDb() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS followers (
+      follower_id INTEGER NOT NULL,
+      followed_id INTEGER NOT NULL,
+      PRIMARY KEY (follower_id, followed_id),
+      FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `);
   
   // Poor-man's migration: Add columns if they don't exist

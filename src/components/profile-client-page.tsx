@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star } from 'lucide-react';
+import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star, UserPlus, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
@@ -13,6 +13,9 @@ import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { CircularProgress } from './ui/circular-progress';
+import { useState, useTransition } from 'react';
+import { toggleFollow } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
 
 
 const createSnippet = (html: string, length: number) => {
@@ -82,9 +85,43 @@ const UserBadge = ({ badge }: { badge: BadgeInfo }) => {
     )
 };
 
-export function ProfileClientPage({ user, articles, topArticles, loggedInUser }: { user: User, articles: Article[], topArticles: Array<Article & { reason: string }>, loggedInUser: (User & { userId: number }) | null }) {
-
+export function ProfileClientPage({ user, articles, topArticles, loggedInUser }: { user: User & { isFollowing?: boolean }, articles: Article[], topArticles: Array<Article & { reason: string }>, loggedInUser: (User & { userId: number }) | null }) {
+  const { toast } = useToast();
   const isOwnProfile = loggedInUser?.id === user.id;
+  const [isFollowing, setIsFollowing] = useState(user.isFollowing || false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleFollow = () => {
+    if (!loggedInUser) {
+        toast({
+            variant: 'destructive',
+            title: 'Not logged in',
+            description: 'You must be logged in to follow an author.',
+        });
+        return;
+    }
+
+    startTransition(async () => {
+        try {
+            const result = await toggleFollow(user.id);
+            if (result.success) {
+                setIsFollowing(result.following!);
+                toast({
+                    title: result.following ? 'Followed!' : 'Unfollowed',
+                    description: `You are now ${result.following ? 'following' : 'no longer following'} ${user.name}.`,
+                });
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error.message,
+            });
+        }
+    });
+  }
 
   const formatReadingTime = (time: number) => {
     if (time < 1) return "Less than 1 min";
@@ -127,8 +164,8 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
                 <h1 className="text-4xl font-headline font-bold">{user.name}</h1>
-                 {user.level !== undefined && (
-                   <Badge variant="outline" className="text-lg">Level {user.level}</Badge>
+                {user.level !== undefined && (
+                  <Badge variant="outline" className="text-lg">Level {user.level}</Badge>
                 )}
               </div>
               <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
@@ -147,7 +184,7 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                   <Calendar className="h-4 w-4" />
                   <span>Joined on {new Date(user.registrationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
-                {(isOwnProfile || user.isEmailPublic) && (
+                {(isOwnProfile || user.isEmailPublic) && user.email && (
                   <div className="flex items-center gap-2">
                     <AtSign className="h-4 w-4" />
                     <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a>
@@ -156,12 +193,20 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
               </div>
             </div>
             <div className="flex flex-col gap-4 items-center">
-                 {isOwnProfile && (
+                 {isOwnProfile ? (
                     <Button variant="outline" asChild>
                       <Link href="/profile/edit">
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Profile
                       </Link>
+                    </Button>
+                ) : loggedInUser && (
+                     <Button variant={isFollowing ? 'secondary' : 'default'} onClick={handleFollow} disabled={isPending}>
+                        {isFollowing ? (
+                            <><UserCheck className="mr-2 h-4 w-4" /> Following</>
+                        ) : (
+                            <><UserPlus className="mr-2 h-4 w-4" /> Follow</>
+                        )}
                     </Button>
                 )}
             </div>

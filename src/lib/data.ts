@@ -252,7 +252,7 @@ export async function getTopArticlesByAuthorId(authorId: number): Promise<Array<
 }
 
 
-export async function getUserProfileData(userName: string) {
+export async function getUserProfileData(userName: string, loggedInUserId?: number) {
     try {
         const user = await getUserByName(userName);
         if (!user) {
@@ -263,9 +263,16 @@ export async function getUserProfileData(userName: string) {
         const topArticles = await getTopArticlesByAuthorId(user.id);
         const gamificationData = await calculateGamificationData(user.id);
         
-        const userWithGamification: User = {
+        let isFollowing = false;
+        if (loggedInUserId) {
+            const followStmt = db.prepare('SELECT 1 FROM followers WHERE follower_id = ? AND followed_id = ?');
+            isFollowing = !!followStmt.get(loggedInUserId, user.id);
+        }
+        
+        const userWithGamification: User & { isFollowing?: boolean } = {
             ...user,
             ...gamificationData,
+            isFollowing,
         };
 
         return { user: userWithGamification, articles, topArticles };
@@ -283,5 +290,37 @@ export async function getUsersForLogin(): Promise<Pick<User, 'id' | 'name' | 'ro
     } catch (err) {
         console.error('Database Error:', err);
         return [];
+    }
+}
+
+export async function getFollowedArticles(userId: number): Promise<Article[]> {
+    try {
+        const articlesStmt = db.prepare(`
+            SELECT 
+                a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
+                u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+            FROM articles a
+            JOIN users u ON a.author_id = u.id
+            JOIN followers f ON a.author_id = f.followed_id
+            WHERE f.follower_id = ? AND a.published_at IS NOT NULL
+            ORDER BY a.published_at DESC
+            LIMIT 10
+        `);
+        const articles = articlesStmt.all(userId) as any[];
+
+        const tagsStmt = db.prepare(`
+            SELECT t.id, t.name 
+            FROM tags t
+            JOIN article_tags at ON t.id = at.tag_id
+            WHERE at.article_id = ?
+        `);
+
+        return articles.map(article => ({
+            ...article,
+            tags: tagsStmt.all(article.id) as Tag[],
+        }));
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch followed articles.');
     }
 }

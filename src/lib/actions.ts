@@ -428,3 +428,31 @@ export async function setFeaturedArticle(articleId: number) {
         throw new Error("Database error while featuring the article.");
     }
 }
+
+export async function toggleFollow(authorId: number) {
+    const user = await getUser();
+    if (!user) {
+        throw new Error('You must be logged in to follow an author.');
+    }
+    if (user.id === authorId) {
+        throw new Error("You cannot follow yourself.");
+    }
+
+    try {
+        const isFollowingStmt = db.prepare('SELECT 1 FROM followers WHERE follower_id = ? AND followed_id = ?');
+        const isFollowing = !!isFollowingStmt.get(user.id, authorId);
+
+        if (isFollowing) {
+            db.prepare('DELETE FROM followers WHERE follower_id = ? AND followed_id = ?').run(user.id, authorId);
+        } else {
+            db.prepare('INSERT INTO followers (follower_id, followed_id) VALUES (?, ?)').run(user.id, authorId);
+        }
+
+        revalidatePath(`/profile/${user.name}`);
+        revalidatePath('/');
+        return { success: true, following: !isFollowing };
+    } catch (e: any) {
+        console.error("Database error while toggling follow:", e);
+        return { success: false, message: "A database error occurred." };
+    }
+}
