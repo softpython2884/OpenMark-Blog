@@ -1,13 +1,38 @@
-diff --git a/node_modules/react-quill/lib/component.js b/node_modules/react-quill/lib/component.js
-index 4758414..a87754d 100644
---- a/node_modules/react-quill/lib/component.js
-+++ b/node_modules/react-quill/lib/component.js
-@@ -37,7 +37,7 @@
- 	['findDOMNode', 'forwardRef', 'createContext'],
- 	function(React) {
- 		return {
--			findDOMNode: require('react-dom').findDOMNode,
-+			findDOMNode: function(ref) { return ref; },
- 			forwardRef: React.forwardRef,
- 			createContext: React.createContext,
- 		};
+diff --git a/node_modules/react-quill/lib/index.js b/node_modules/react-quill/lib/index.js
+index 474729f..337c76a 100644
+--- a/node_modules/react-quill/lib/index.js
++++ b/node_modules/react-quill/lib/index.js
+@@ -1079,7 +1079,7 @@
+ 		var editor = this.getEditor();
+ 		// The editing area is the editor's DOM root node.
+-		var editingArea = _reactDom2.default.findDOMNode(editor);
++		var editingArea = editor.editingArea;
+ 		if (!editingArea) {
+ 			throw new Error('The editor is not mounted.');
+ 		}
+diff --git a/node_modules/react-quill/lib/mixin.js b/node_modules/react-quill/lib/mixin.js
+index 2899321..014b62d 100644
+--- a/node_modules/react-quill/lib/mixin.js
++++ b/node_modules/react-quill/lib/mixin.js
+@@ -35,7 +35,7 @@
+ 	},
+ 
+ 	getEditingArea: function getEditingArea() {
+-		return ReactDOM.findDOMNode(this.refs.editor);
++		return this.refs.editor.editingArea;
+ 	},
+ 
+ 	getEditor: function getEditor() {
+diff --git a/node_modules/react-quill/lib/toolbar.js b/node_modules/react-quill/lib/toolbar.js
+index 10a7863..5304918 100644
+--- a/node_modules/react-quill/lib/toolbar.js
++++ b/node_modules/react-quill/lib/toolbar.js
+@@ -118,7 +118,7 @@
+ 	},
+ 
+ 	setEditingArea: function setEditingArea() {
+-		var editor = this.props.editor;
++		var editor = this.props.quill;
+ 		var el = editor && editor.getEditingArea();
+ 		this.setState({ editor: el });
+ 	},
