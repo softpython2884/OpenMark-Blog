@@ -2,10 +2,17 @@
 
 import { useState, useTransition } from 'react';
 import { Button } from './ui/button';
-import { ThumbsUp, Share2 } from 'lucide-react';
+import { ThumbsUp, Share2, Twitter, Linkedin } from 'lucide-react';
 import { toggleLike } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { articleId: number, initialLikes: number, initialIsLiked: boolean }) {
   const [likes, setLikes] = useState(initialLikes);
@@ -33,7 +40,22 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
     });
   };
 
-  const handleShare = () => {
+  const shareOn = (platform: 'twitter' | 'linkedin') => {
+    const url = window.location.href;
+    const text = document.title;
+    let shareUrl = '';
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        break;
+    }
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
         title: 'Link Copied!',
@@ -47,10 +69,29 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
             <ThumbsUp className="mr-2 h-4 w-4" />
             <span>{likes} {likes === 1 ? 'Like' : 'Likes'}</span>
         </Button>
-        <Button variant="outline" onClick={handleShare}>
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-        </Button>
+        
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => shareOn('twitter')}>
+                    <Twitter className="mr-2 h-4 w-4" />
+                    <span>Share on X</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => shareOn('linkedin')}>
+                    <Linkedin className="mr-2 h-4 w-4" />
+                    <span>Share on LinkedIn</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyLink}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Copy Link</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     </div>
   );
 }

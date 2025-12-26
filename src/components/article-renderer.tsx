@@ -14,6 +14,15 @@ import React from 'react';
 const processNodeDefinitions = new ProcessNodeDefinitions(React);
 const parser = new Parser();
 
+const isValidYoutubeUrl = (url: string) => {
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.hostname === 'www.youtube.com' && parsedUrl.pathname.startsWith('/embed/');
+    } catch (e) {
+        return false;
+    }
+};
+
 const processingInstructions = [
     {
         shouldProcessNode: (node: any) => {
@@ -30,6 +39,22 @@ const processingInstructions = [
         }
     },
     {
+        shouldProcessNode: (node: any) => node.name === 'iframe',
+        processNode: (node: any, children: any, index: number) => {
+            if (isValidYoutubeUrl(node.attribs.src)) {
+                return (
+                    <div key={index} className="aspect-video w-full my-6">
+                        <iframe
+                            {...node.attribs}
+                            className="w-full h-full rounded-lg"
+                        />
+                    </div>
+                )
+            }
+            return null; // Don't render invalid iframes
+        }
+    },
+    {
         // Default processing
         shouldProcessNode: () => true,
         processNode: processNodeDefinitions.processDefaultNode
@@ -43,15 +68,15 @@ export function ArticleRenderer({ content }: { content: Article['content']}) {
     useEffect(() => {
         // Sanitize the HTML on the client-side to prevent XSS attacks.
         let clean = DOMPurify.sanitize(content, {
-            ADD_TAGS: ['div', 'ul', 'ol', 'li', 'pre', 'code', 'blockquote', 'details', 'summary', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'a', 'hr', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-            ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item', 'href', 'src', 'alt'],
+            ADD_TAGS: ['div', 'ul', 'ol', 'li', 'pre', 'code', 'blockquote', 'details', 'summary', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'a', 'hr', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'iframe'],
+            ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item', 'href', 'src', 'alt', 'frameborder', 'allow', 'allowfullscreen', 'width', 'height'],
         });
 
         // Fix for hydration errors with tables by removing whitespace
         clean = clean.replace(/>\s+</g, '><');
 
         // We need to parse the HTML string and convert it to React components
-        // to properly handle our custom Callout component.
+        // to properly handle our custom Callout component and secure iframes.
         const reactElement = parser.parseWithInstructions(clean, () => true, processingInstructions);
         setRenderedContent(reactElement);
 

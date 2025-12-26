@@ -16,7 +16,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link as LinkIcon, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link as LinkIcon, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import, Youtube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
@@ -85,6 +85,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
     { icon: Code, label: 'Code Block', snippet: '<pre><code class="font-code">// Your code here</code></pre>\n' },
     { icon: Minus, label: 'Separator', snippet: '<hr>\n' },
     { icon: ImageIcon, label: 'Image', snippet: '<img src="https://i.imgur.com/your-image-id.png" alt="Description" />\n' },
+    { icon: Youtube, label: 'YouTube', snippet: '<iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n' },
   ];
   
   const custom = [
