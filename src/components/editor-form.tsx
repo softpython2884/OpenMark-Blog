@@ -137,6 +137,7 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
 function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) => void, closeDialog: () => void }) {
     const [rawContent, setRawContent] = useState('');
     const { toast } = useToast();
+    const [wasPastedAsRichText, setWasPastedAsRichText] = useState(false);
 
     const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
         event.preventDefault();
@@ -148,32 +149,27 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
             toast({ title: 'Rich content detected!', description: 'Pasted HTML has been sanitized and loaded.' });
             const sanitizedHtml = DOMPurify.sanitize(html, {
                 USE_PROFILES: { html: true },
-                // Allow specific data attributes for our custom components
-                ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item'],
-                // Forbid all style and class attributes to enforce our own styling
+                ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item', 'href', 'src', 'alt'],
                 FORBID_ATTR: ['style', 'class'],
             });
             setRawContent(sanitizedHtml);
+            setWasPastedAsRichText(true);
         } else {
             setRawContent(text);
+            setWasPastedAsRichText(false);
         }
     };
 
     const handleConvert = () => {
         let processedContent = rawContent;
 
-        // Process custom callout syntax first: [VARIANT:Text]
         processedContent = processedContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):([\s\S]*?)\]/gi, (match, variant, text) => {
             const lowerVariant = variant.toLowerCase();
-            // Use marked to parse inner content of callout
             const innerHtml = marked.parse(text.trim());
-            // The paragraph wrapping the variant name has been removed to avoid double paragraphs
             return `<div data-callout data-variant="${lowerVariant}">${innerHtml}</div>`;
         });
         
-        // If the content was not already HTML, convert from Markdown
-        // We can check if the original paste was plain text
-        if (!rawContent.match(/<[a-z][\s\S]*>/i)) {
+        if (!wasPastedAsRichText && !rawContent.match(/<[a-z][\s\S]*>/i)) {
              processedContent = marked.parse(processedContent, { breaks: true, gfm: true });
         }
 
@@ -195,7 +191,10 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
                     placeholder="Paste your content here..."
                     value={rawContent}
                     onPaste={handlePaste}
-                    onChange={(e) => setRawContent(e.target.value)}
+                    onChange={(e) => {
+                        setRawContent(e.target.value);
+                        setWasPastedAsRichText(false);
+                    }}
                     className="min-h-[300px] font-mono"
                 />
                 <div className="text-sm p-4 bg-muted/80 rounded-md">
@@ -366,7 +365,7 @@ export function EditorForm({ article }: { article: Article | null }) {
                 <Textarea
                   {...field}
                   ref={contentTextareaRef}
-                  placeholder="Write your article content here. You can use HTML tags."
+                  placeholder="Write your article content here.&#10;This field supports full HTML. For best results with AI, ask for the output directly in HTML.&#10;You can also use custom callouts with the syntax [VARIANT:Your text here] when importing."
                   className="min-h-[400px] font-mono text-sm"
                 />
               )}
@@ -467,3 +466,5 @@ export function EditorForm({ article }: { article: Article | null }) {
     </form>
   );
 }
+
+    
