@@ -7,6 +7,7 @@ const SCORE_CONFIG = {
   LIKE_RECEIVED: 5,
   COMMENT_RECEIVED: 10,
   COMMENT_MADE: 2,
+  FOLLOWER_RECEIVED: 15,
 };
 
 function calculateLevel(score: number): { level: number, progress: number } {
@@ -76,6 +77,10 @@ export async function calculateGamificationData(userId: number) {
   const commentsMade = (db.prepare('SELECT COUNT(*) as count FROM comments WHERE author_id = ?').get(userId) as { count: number }).count;
   score += commentsMade * SCORE_CONFIG.COMMENT_MADE;
 
+  // Calculate score from followers
+  const followerCount = (db.prepare('SELECT COUNT(*) as count FROM followers WHERE followed_id = ?').get(userId) as { count: number }).count;
+  score += followerCount * SCORE_CONFIG.FOLLOWER_RECEIVED;
+
   const { level, progress } = calculateLevel(score);
   const badges = getBadges(user, articleCount);
 
@@ -84,5 +89,6 @@ export async function calculateGamificationData(userId: number) {
     level,
     levelProgress: progress,
     badges,
+    followerCount,
   };
 }

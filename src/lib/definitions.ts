@@ -19,6 +19,7 @@ export type User = {
   level?: number;
   levelProgress?: number;
   badges?: BadgeInfo[];
+  followerCount?: number;
 };
 
 export type Tag = {

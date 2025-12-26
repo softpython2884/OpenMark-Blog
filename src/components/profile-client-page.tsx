@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star, UserPlus, UserCheck } from 'lucide-react';
+import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star, UserPlus, UserCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
@@ -145,10 +145,10 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
              <div className="relative flex flex-col items-center gap-4">
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger asChild>
                        <div className="relative h-28 w-28 flex items-center justify-center">
                           <CircularProgress value={user.levelProgress} className="absolute inset-0 m-auto" />
-                          <Avatar className="h-20 w-20">
+                          <Avatar className="h-20 w-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                               <AvatarImage src={user.avatarUrl} alt={user.name} />
                               <AvatarFallback className="text-3xl">{user.name.charAt(0)}</AvatarFallback>
                           </Avatar>
@@ -176,6 +176,10 @@ export function ProfileClientPage({ user, articles, topArticles, loggedInUser }:
                   <p className="text-muted-foreground text-center md:text-left max-w-prose mt-4">{user.bio}</p>
                 )}
               <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mt-4 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>{user.followerCount} {user.followerCount === 1 ? 'follower' : 'followers'}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   <span>{articles.length} {articles.length === 1 ? 'article' : 'articles'} published</span>
