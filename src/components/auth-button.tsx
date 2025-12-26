@@ -52,6 +52,12 @@ export function AuthButton({ user }: { user: User | null }) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+         <DropdownMenuItem asChild>
+            <Link href={`/profile/${encodeURIComponent(user.name)}`}>
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>My Profile</span>
+            </Link>
+        </DropdownMenuItem>
         {isAdmin && (
            <DropdownMenuItem asChild>
              <Link href="/admin">
