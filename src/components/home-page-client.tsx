@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ArrowRight, Search, Clock, BookOpen, PenSquare, Rss } from 'lucide-react';
+import { PlusCircle, ArrowRight, Search, Clock, BookOpen, PenSquare, Rss, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,7 +32,7 @@ const createSnippet = (html: string, length: number) => {
   return truncatedText.substring(0, Math.min(truncatedText.length, truncatedText.lastIndexOf(' '))) + '...';
 };
 
-export function HomePageClient({ user, articles, followedArticles }: { user: User | null, articles: Article[], followedArticles: Article[] }) {
+export function HomePageClient({ user, articles, followedArticles, recommendedArticles }: { user: User | null, articles: Article[], followedArticles: Article[], recommendedArticles: Article[] }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -130,6 +131,65 @@ export function HomePageClient({ user, articles, followedArticles }: { user: Use
                                             fill
                                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                                             data-ai-hint={placeholderImages[(index + 1) % placeholderImages.length].imageHint}
+                                        />
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow p-6 relative">
+                                        <CardTitle className="font-headline text-xl leading-tight mb-2">{article.title}</CardTitle>
+                                        <p className="text-muted-foreground text-sm line-clamp-3">
+                                            {article.summary || createSnippet(article.content, 100)}
+                                        </p>
+                                    </CardContent>
+                                </Link>
+                                <CardFooter className="p-6 pt-2 flex flex-col items-start gap-4 mt-auto">
+                                    <div className="w-full flex justify-between items-end">
+                                      <div className="flex flex-wrap gap-2">
+                                          {article.tags.slice(0, 2).map(tag => (
+                                              <button key={tag.id} onClick={() => handleTagClick(tag.name)} className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
+                                                  <Badge variant="secondary" className="cursor-pointer hover:bg-primary/20">{tag.name}</Badge>
+                                              </button>
+                                          ))}
+                                      </div>
+                                      <Link href={`/profile/${encodeURIComponent(article.authorName || '')}`} className="hover:underline flex items-center gap-2 flex-shrink-0">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
+                                            <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                      </Link>
+                                    </div>
+                                </CardFooter>
+                                </Card>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="hidden md:flex" />
+                <CarouselNext className="hidden md:flex" />
+            </Carousel>
+        </section>
+      )}
+
+      {user && recommendedArticles.length > 0 && (
+        <section className="mb-12">
+            <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-3">
+                <Sparkles className="h-7 w-7 text-primary" />
+                Recommended For You
+            </h2>
+            <Carousel opts={{ align: "start", loop: false }} className="w-full">
+                <CarouselContent>
+                    {recommendedArticles.map((article, index) => (
+                        <CarouselItem key={article.id} className="md:basis-1/2 lg:basis-1/3">
+                            <div className="p-1">
+                                <Card className="flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full">
+                                <Link href={`/article/${article.slug}`} className="block group">
+                                    <CardHeader className="p-0">
+                                        <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
+                                        <Image
+                                            src={article.imageUrl || placeholderImages[(index + 2) % placeholderImages.length].imageUrl}
+                                            alt={article.title}
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            data-ai-hint={placeholderImages[(index + 2) % placeholderImages.length].imageHint}
                                         />
                                         </div>
                                     </CardHeader>

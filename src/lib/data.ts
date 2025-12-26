@@ -86,7 +86,25 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
         if (userId) {
             const isLikedStmt = db.prepare('SELECT 1 FROM likes WHERE article_id = ? AND user_id = ?');
             article.isLiked = !!isLikedStmt.get(article.id, userId);
+
+            // Track tag views for recommendation engine
+            try {
+              const insertViewStmt = db.prepare(`
+                INSERT INTO user_tag_views (user_id, tag_id, view_count) 
+                VALUES (?, ?, 1)
+                ON CONFLICT(user_id, tag_id) 
+                DO UPDATE SET view_count = view_count + 1
+              `);
+              db.transaction(() => {
+                for (const tag of article.tags) {
+                  insertViewStmt.run(userId, tag.id);
+                }
+              })();
+            } catch (e) {
+                console.error("Failed to update tag views:", e);
+            }
         }
+
 
         return article as Article;
     } catch (err) {
@@ -323,6 +341,53 @@ export async function getFollowedArticles(userId: number): Promise<Article[]> {
     } catch (err) {
         console.error('Database Error:', err);
         throw new Error('Failed to fetch followed articles.');
+    }
+}
+
+export async function getRecommendedArticles(userId: number): Promise<Article[]> {
+    try {
+        // Get user's top 5 viewed tags
+        const topTagsStmt = db.prepare(`
+            SELECT tag_id FROM user_tag_views
+            WHERE user_id = ?
+            ORDER BY view_count DESC
+            LIMIT 5
+        `);
+        const topTags = topTagsStmt.all(userId) as { tag_id: number }[];
+        if (topTags.length === 0) return [];
+        const topTagIds = topTags.map(t => t.tag_id);
+
+        // Get articles that have these tags, are published, and are not authored by the user
+        const articlesStmt = db.prepare(`
+            SELECT DISTINCT a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl,
+                            a.author_id as authorId, u.name as authorName, u.avatar_url as authorAvatarUrl,
+                            a.published_at as publishedAt
+            FROM articles a
+            JOIN article_tags at ON a.id = at.article_id
+            JOIN users u ON a.author_id = u.id
+            WHERE at.tag_id IN (${topTagIds.map(() => '?').join(',')})
+              AND a.author_id != ?
+              AND a.published_at IS NOT NULL
+            ORDER BY a.published_at DESC
+            LIMIT 20
+        `);
+        const articles = articlesStmt.all(...topTagIds, userId) as any[];
+
+        const tagsStmt = db.prepare(`
+            SELECT t.id, t.name 
+            FROM tags t
+            JOIN article_tags at ON t.id = at.tag_id
+            WHERE at.article_id = ?
+        `);
+
+        return articles.map(article => ({
+            ...article,
+            tags: tagsStmt.all(article.id) as Tag[],
+        }));
+
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch recommended articles.');
     }
 }
 

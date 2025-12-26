@@ -29,8 +29,7 @@ function initializeDb() {
       summary TEXT,
       image_url TEXT,
       author_id INTEGER NOT NULL,
-      created_at DATETIME DEFAULT CURRENT
-_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
       is_featured INTEGER DEFAULT 0,
@@ -87,6 +86,15 @@ _TIMESTAMP,
       status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'resolved', 'dismissed')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS user_tag_views (
+        user_id INTEGER NOT NULL,
+        tag_id INTEGER NOT NULL,
+        view_count INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (user_id, tag_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
     );
   `);
   
