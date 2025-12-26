@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -133,58 +134,84 @@ const SnippetToolbar = ({ onInsert }: { onInsert: (snippet: string) => void }) =
   );
 };
 
-function ImportDialog({ onImport }: { onImport: (content: string) => void }) {
-  const [rawContent, setRawContent] = useState('');
-  const { toast } = useToast();
+function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) => void, closeDialog: () => void }) {
+    const [rawContent, setRawContent] = useState('');
+    const { toast } = useToast();
 
-  const handleConvert = () => {
-    let processedContent = rawContent;
+    const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        event.preventDefault();
+        const clipboardData = event.clipboardData;
+        const html = clipboardData.getData('text/html');
+        const text = clipboardData.getData('text/plain');
 
-    // First, handle custom callout syntax: [VARIANT:Text]
-    processedContent = processedContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):([\s\S]*?)\]/gi, (match, variant, text) => {
-        const lowerVariant = variant.toLowerCase();
-        const capitalizedVariant = variant.charAt(0).toUpperCase() + variant.slice(1).toLowerCase();
-        // Use marked to parse inner content of callout
-        const innerHtml = marked.parse(text.trim());
-        return `<div data-callout data-variant="${lowerVariant}"><p>${capitalizedVariant}:</p>${innerHtml}</div>`;
-    });
-    
-    // Now, convert the rest of the content from Markdown to HTML
-    const htmlContent = marked.parse(processedContent, { breaks: true, gfm: true });
+        if (html) {
+            toast({ title: 'Rich content detected!', description: 'Pasted HTML has been sanitized and loaded.' });
+            const sanitizedHtml = DOMPurify.sanitize(html, {
+                USE_PROFILES: { html: true },
+                // Allow specific data attributes for our custom components
+                ADD_ATTR: ['data-variant', 'data-icon', 'data-callout', 'data-timeline', 'data-timeline-item'],
+                // Forbid all style and class attributes to enforce our own styling
+                FORBID_ATTR: ['style', 'class'],
+            });
+            setRawContent(sanitizedHtml);
+        } else {
+            setRawContent(text);
+        }
+    };
 
-    onImport(htmlContent);
-    toast({ title: 'Content Imported!', description: 'The raw text has been converted to HTML.' });
-  };
+    const handleConvert = () => {
+        let processedContent = rawContent;
 
-  return (
-    <DialogContent className="max-w-3xl">
-      <DialogHeader>
-        <DialogTitle>Import Content</DialogTitle>
-      </DialogHeader>
-      <div className="grid gap-4 py-4">
-        <Textarea
-          placeholder="Paste your Markdown, copied text, or raw HTML here..."
-          value={rawContent}
-          onChange={(e) => setRawContent(e.target.value)}
-          className="min-h-[300px] font-mono"
-        />
-        <div className="text-sm p-4 bg-muted/80 rounded-md">
-            <h4 className="font-semibold mb-2">Tip: Use Custom Callout Syntax</h4>
-            <p>You can create callouts directly from your raw text using the format <code className="font-semibold">[VARIANT:Your text here]</code>.</p>
-            <p className="mt-1">Supported variants: <code className="font-semibold">NOTE, TIP, SUCCESS, WARNING, DANGER, QUESTION</code>.</p>
-            <p className="mt-2">Example: <code className="font-semibold">[SUCCESS:Your article has been published!]</code> will become a success callout.</p>
-        </div>
-      </div>
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button type="button" variant="secondary">Cancel</Button>
-        </DialogClose>
-        <DialogClose asChild>
-          <Button type="button" onClick={handleConvert}>Convert and Import</Button>
-        </DialogClose>
-      </DialogFooter>
-    </DialogContent>
-  );
+        // Process custom callout syntax first: [VARIANT:Text]
+        processedContent = processedContent.replace(/\[(NOTE|TIP|SUCCESS|WARNING|DANGER|QUESTION):([\s\S]*?)\]/gi, (match, variant, text) => {
+            const lowerVariant = variant.toLowerCase();
+            // Use marked to parse inner content of callout
+            const innerHtml = marked.parse(text.trim());
+            // The paragraph wrapping the variant name has been removed to avoid double paragraphs
+            return `<div data-callout data-variant="${lowerVariant}">${innerHtml}</div>`;
+        });
+        
+        // If the content was not already HTML, convert from Markdown
+        // We can check if the original paste was plain text
+        if (!rawContent.match(/<[a-z][\s\S]*>/i)) {
+             processedContent = marked.parse(processedContent, { breaks: true, gfm: true });
+        }
+
+        onImport(processedContent);
+        toast({ title: 'Content Imported!', description: 'The content has been converted to HTML.' });
+        closeDialog();
+    };
+
+    return (
+        <DialogContent className="max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Import from Clipboard or Text</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                    Paste your content below. You can paste rich text (from Google Docs, Word, etc.) or plain Markdown. The importer will automatically sanitize and convert it.
+                </p>
+                <Textarea
+                    placeholder="Paste your content here..."
+                    value={rawContent}
+                    onPaste={handlePaste}
+                    onChange={(e) => setRawContent(e.target.value)}
+                    className="min-h-[300px] font-mono"
+                />
+                <div className="text-sm p-4 bg-muted/80 rounded-md">
+                    <h4 className="font-semibold mb-2">Tip: Use Custom Callout Syntax</h4>
+                    <p>For plain text, you can create callouts using the format <code className="font-semibold">[VARIANT:Your text here]</code>.</p>
+                    <p className="mt-1">Supported variants: <code className="font-semibold">NOTE, TIP, SUCCESS, WARNING, DANGER, QUESTION</code>.</p>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="secondary">Cancel</Button>
+                </DialogClose>
+                <Button type="button" onClick={handleConvert}>Convert and Import</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
 }
 
 
@@ -194,6 +221,7 @@ export function EditorForm({ article }: { article: Article | null }) {
   const [isAiPending, startAiTransition] = useTransition();
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isImportDialogOpen, setImportDialogOpen] = useState(false);
   
   const {
     register,
@@ -261,14 +289,10 @@ export function EditorForm({ article }: { article: Article | null }) {
       const end = textarea.selectionEnd;
       const text = textarea.value;
       
-      // Check if there is selected text
       if (start !== end) {
         const selectedText = text.substring(start, end);
-        // Wrap selected text with the snippet, assuming the snippet is a simple tag like <strong>{selection}</strong>
-        // This is a simplified implementation. For complex snippets, this logic needs to be smarter.
         const wrappedText = snippet.replace(/((?:<.*>))(.*?)((?:<\/.*>))/, `$1${selectedText}$3`);
         
-        // A simple check if the replacement is valid for wrapping
         if (wrappedText !== snippet) {
              const newText = text.substring(0, start) + wrappedText + text.substring(end);
              setValue('content', newText, { shouldValidate: true });
@@ -277,7 +301,6 @@ export function EditorForm({ article }: { article: Article | null }) {
                 textarea.setSelectionRange(start, start + wrappedText.length);
              }, 0);
         } else {
-             // Fallback for complex snippets or if wrapping fails: just insert
              const newText = text.substring(0, start) + snippet + text.substring(end);
             setValue('content', newText, { shouldValidate: true });
             setTimeout(() => {
@@ -287,7 +310,6 @@ export function EditorForm({ article }: { article: Article | null }) {
         }
 
       } else {
-        // No text selected, just insert the snippet
         const newText = text.substring(0, start) + snippet + text.substring(end);
         setValue('content', newText, { shouldValidate: true });
         setTimeout(() => {
@@ -320,14 +342,14 @@ export function EditorForm({ article }: { article: Article | null }) {
       <div>
         <div className="flex items-center justify-between mb-1">
             <Label htmlFor="content" className="text-lg">Content (HTML)</Label>
-            <Dialog>
+            <Dialog open={isImportDialogOpen} onOpenChange={setImportDialogOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="sm">
                         <Import className="mr-2 h-4 w-4" />
-                        Import from Text
+                        Import Content
                     </Button>
                 </DialogTrigger>
-                <ImportDialog onImport={handleImport} />
+                <ImportDialog onImport={handleImport} closeDialog={() => setImportDialogOpen(false)} />
             </Dialog>
         </div>
         <Tabs defaultValue="edit" className="w-full">
