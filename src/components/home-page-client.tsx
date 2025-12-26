@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Article, User } from '@/lib/definitions';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -136,7 +136,7 @@ export function HomePageClient({ user, articles }: { user: User | null, articles
                         <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
                         <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span>By {article.authorName}</span> &middot; <span>{new Date(article.publishedAt!).toLocaleDateString()}</span>
+                      <span>By {article.authorName}</span> &middot; <span>{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     </div>
                   </div>
                 </CardHeader>
