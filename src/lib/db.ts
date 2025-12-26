@@ -54,9 +54,11 @@ function initializeDb() {
       content TEXT NOT NULL,
       article_id INTEGER NOT NULL,
       author_id INTEGER NOT NULL,
+      parent_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
-      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS likes (
@@ -102,6 +104,14 @@ function initializeDb() {
   if (!articleColumnNames.includes('is_featured')) {
       console.log("Applying migration: Adding 'is_featured' to articles table.");
       db.exec('ALTER TABLE articles ADD COLUMN is_featured INTEGER DEFAULT 0');
+  }
+
+  const commentColumns = db.prepare("PRAGMA table_info(comments)").all();
+  const commentColumnNames = commentColumns.map((col: any) => col.name);
+
+  if (!commentColumnNames.includes('parent_id')) {
+    console.log("Applying migration: Adding 'parent_id' to comments table.");
+    db.exec('ALTER TABLE comments ADD COLUMN parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE');
   }
 
   // Handle unique constraint on 'name' for existing data

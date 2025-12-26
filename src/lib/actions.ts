@@ -141,19 +141,50 @@ export async function deleteArticle(articleId: number) {
 }
 
 
-export async function addComment(articleId: number, content: string) {
+export async function addComment(articleId: number, content: string, parentId?: number) {
     const user = await getUser();
     if (!user) throw new Error('You must be logged in to comment.');
     if (user.role === 'SUSPENDED') throw new Error('Your account is suspended. You cannot post comments.');
     if (!content.trim()) throw new Error('Comment cannot be empty.');
 
     try {
-        const stmt = db.prepare('INSERT INTO comments (article_id, author_id, content) VALUES (?, ?, ?)');
-        stmt.run(articleId, user.id, content);
+        const stmt = db.prepare('INSERT INTO comments (article_id, author_id, content, parent_id) VALUES (?, ?, ?, ?)');
+        stmt.run(articleId, user.id, content, parentId || null);
         revalidatePath(`/article/[slug]`, 'page');
         return { success: true };
     } catch(e: any) {
         return { success: false, message: e.message };
+    }
+}
+
+export async function deleteComment(commentId: number) {
+    const user = await getUser();
+    if (!user) {
+        throw new Error("You must be logged in to delete a comment.");
+    }
+
+    const comment = db.prepare('SELECT author_id FROM comments WHERE id = ?').get(commentId) as { author_id: number } | undefined;
+
+    if (!comment) {
+        throw new Error("Comment not found.");
+    }
+
+    if (comment.author_id !== user.id && user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+        throw new Error("You are not authorized to delete this comment.");
+    }
+
+    try {
+        // Using a transaction to ensure both deletes happen or neither do.
+        db.transaction(() => {
+            // Delete the comment itself and any replies to it.
+            // The ON DELETE CASCADE foreign key constraint should handle this automatically.
+            db.prepare('DELETE FROM comments WHERE id = ?').run(commentId);
+        })();
+        revalidatePath(`/article/[slug]`, 'page');
+        return { success: true };
+    } catch (e: any) {
+        console.error("Database error while deleting comment:", e);
+        throw new Error("Database error occurred while deleting the comment.");
     }
 }
 

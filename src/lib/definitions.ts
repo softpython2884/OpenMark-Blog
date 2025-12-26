@@ -54,4 +54,6 @@ export type Comment = {
   authorName?: string;
   authorAvatarUrl?: string;
   createdAt: string;
+  parentId: number | null;
+  children?: Comment[];
 };
