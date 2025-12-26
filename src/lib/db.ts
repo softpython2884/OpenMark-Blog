@@ -1,3 +1,4 @@
+
 import Database from 'better-sqlite3';
 import { placeholderImages } from './placeholder-images';
 import bcrypt from 'bcryptjs';
@@ -31,7 +32,7 @@ function initializeDb() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
-      FOREIGN KEY (author_id) REFERENCES users(id)
+      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     );
     
     CREATE TABLE IF NOT EXISTS tags (
@@ -54,7 +55,7 @@ function initializeDb() {
       author_id INTEGER NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
-      FOREIGN KEY (author_id) REFERENCES users(id)
+      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS likes (
@@ -112,7 +113,7 @@ function initializeDb() {
       const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
       if(userCount.count > 0) {
         try {
-          // This will fail if the constraint is already there, which is fine.
+          db.pragma('foreign_keys = OFF');
           db.exec(`
             CREATE TABLE IF NOT EXISTS users_new (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,8 +130,10 @@ function initializeDb() {
           db.exec('INSERT INTO users_new SELECT id, name, email, password, role, avatar_url, registration_date, bio, is_email_public FROM users;');
           db.exec('DROP TABLE users;');
           db.exec('ALTER TABLE users_new RENAME TO users;');
+          db.pragma('foreign_keys = ON');
           console.log("Successfully applied UNIQUE constraint to user names.");
         } catch(e: any) {
+          db.pragma('foreign_keys = ON');
           if (!e.message.includes('already exists')) {
             console.error("Failed to apply UNIQUE constraint migration:", e);
           }
