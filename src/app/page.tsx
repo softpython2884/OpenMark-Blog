@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Function to create a text-only snippet from HTML content
 const createSnippet = (html: string, length: number) => {
@@ -30,8 +31,53 @@ export default async function Home() {
   const articles = await getPublishedArticles();
   const canCreate = user && ['ADMIN', 'EDITOR', 'AUTHOR'].includes(user.role);
 
+  const heroArticle = articles.length > 0 ? articles[0] : null;
+  const otherArticles = articles.length > 1 ? articles.slice(1) : [];
+
   return (
     <div className="container mx-auto px-4 py-8">
+      
+      {heroArticle && (
+        <section className="mb-12 w-full">
+            <div className="relative h-[60vh] md:h-[70vh] w-full rounded-2xl overflow-hidden flex items-center justify-center text-white">
+                <Image
+                    src={heroArticle.imageUrl || placeholderImages[0].imageUrl}
+                    alt={heroArticle.title}
+                    fill
+                    priority
+                    className="object-cover"
+                    data-ai-hint={placeholderImages[0].imageHint}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+                <div className="relative z-10 max-w-4xl p-8 text-center flex flex-col items-center">
+                    {heroArticle.tags.length > 0 && (
+                        <Badge variant="secondary" className="mb-4 text-sm">{heroArticle.tags[0].name}</Badge>
+                    )}
+                    <h1 className="text-4xl md:text-6xl font-headline font-bold leading-tight mb-4 text-shadow-lg">
+                       <Link href={`/article/${heroArticle.slug}`}>{heroArticle.title}</Link>
+                    </h1>
+                    <div className="flex items-center gap-4 text-lg mb-6">
+                        <div className="flex items-center gap-2">
+                           <Avatar className="h-8 w-8">
+                                <AvatarFallback>{heroArticle.authorName?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span>{heroArticle.authorName}</span>
+                        </div>
+                        <span>&middot;</span>
+                        <time dateTime={heroArticle.publishedAt!}>
+                            {new Date(heroArticle.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </time>
+                    </div>
+                    <Button asChild size="lg">
+                        <Link href={`/article/${heroArticle.slug}`}>
+                            Read Article <ArrowRight className="ml-2" />
+                        </Link>
+                    </Button>
+                </div>
+            </div>
+        </section>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-headline font-bold">Latest Articles</h1>
         {canCreate && (
@@ -44,24 +90,24 @@ export default async function Home() {
         )}
       </div>
 
-      {articles.length === 0 ? (
+      {otherArticles.length === 0 && !heroArticle ? (
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
           <h2 className="text-2xl font-semibold text-muted-foreground">No articles yet</h2>
           <p className="text-muted-foreground mt-2">Be the first one to write something amazing!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {articles.map((article, index) => (
+          {otherArticles.map((article, index) => (
             <Card key={article.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
                <Link href={`/article/${article.slug}`} className="block">
                 <CardHeader>
                   <div className="relative aspect-video w-full mb-4">
                      <Image
-                      src={article.imageUrl || placeholderImages[index % placeholderImages.length].imageUrl}
+                      src={article.imageUrl || placeholderImages[(index + 1) % placeholderImages.length].imageUrl}
                       alt={article.title}
                       fill
                       className="rounded-t-lg object-cover"
-                      data-ai-hint={placeholderImages[index % placeholderImages.length].imageHint}
+                      data-ai-hint={placeholderImages[(index + 1) % placeholderImages.length].imageHint}
                     />
                   </div>
                   <CardTitle className="font-headline text-2xl leading-tight">{article.title}</CardTitle>
@@ -72,7 +118,7 @@ export default async function Home() {
               </Link>
               <CardContent className="flex-grow relative overflow-hidden">
                 <CardDescription className="h-24 whitespace-pre-wrap text-center">
-                  {article.summary || createSnippet(article.content, 150)}
+                  {article.summary || createSnippet(article.content, 250)}
                 </CardDescription>
                  <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-card via-card/80 to-transparent pointer-events-none" />
               </CardContent>
