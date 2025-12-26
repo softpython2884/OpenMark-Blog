@@ -17,7 +17,7 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Eye, Code } from 'lucide-react';
+import { Sparkles, Tags, Text, Eye, Code, Activity, AlarmClock, Album, Angry, Annoyed, Info, AlertTriangle, Zap, Flame } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +35,17 @@ const ArticleFormSchema = z.object({
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
 
-const emojis = ['😀', '😂', '😍', '🤔', '👍', '❤️', '🚀', '⭐', '🎉', '💡'];
+const admonitions = [
+  { name: 'Note', icon: Info, variant: 'note' },
+  { name: 'Tip', icon: Zap, variant: 'tip' },
+  { name: 'Warning', icon: AlertTriangle, variant: 'warning' },
+  { name: 'Danger', icon: Flame, variant: 'danger' },
+  { name: 'Activity', icon: Activity, variant: 'note' },
+  { name: 'Alarm', icon: AlarmClock, variant: 'note' },
+  { name: 'Album', icon: Album, variant: 'note' },
+  { name: 'Angry', icon: Angry, variant: 'warning' },
+  { name: 'Annoyed', icon: Annoyed, variant: 'warning' },
+];
 
 export function EditorForm({ article }: { article: Article | null }) {
   const { toast } = useToast();
@@ -95,10 +105,12 @@ export function EditorForm({ article }: { article: Article | null }) {
       toast({ title: 'AI Tags Suggested!', description: 'New tags have been added.' });
     });
   };
-
-  const addEmoji = (emoji: string) => {
-    setValue('content', `${watch('content')}${emoji}`);
+  
+  const insertAdmonition = (name: string, variant: string) => {
+    const snippet = `\n<div data-callout="true" data-icon="${name.toLowerCase()}" data-variant="${variant}">\n\nYour content here...\n\n</div>\n`;
+    setValue('content', watch('content') + snippet);
   };
+
 
   return (
     <form action={formAction} className="space-y-8">
@@ -126,6 +138,7 @@ export function EditorForm({ article }: { article: Article | null }) {
                 id="content" 
                 {...register('content')} 
                 className="mt-1 font-mono h-[500px] rounded-t-none" 
+                placeholder="Write your article here. Use markdown for formatting."
             />
              {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
         </TabsContent>
@@ -138,14 +151,17 @@ export function EditorForm({ article }: { article: Article | null }) {
         </TabsContent>
       </Tabs>
       
-      <div className="flex items-center gap-2">
-        <Label>Emoji:</Label>
-         {emojis.map(emoji => (
-          <Button key={emoji} type="button" variant="outline" size="icon" onClick={() => addEmoji(emoji)} className="text-xl">
-            {emoji}
+       <div>
+        <Label className="text-lg">Admonitions</Label>
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+         {admonitions.map(({name, icon: Icon, variant}) => (
+          <Button key={name} type="button" variant="outline" size="sm" onClick={() => insertAdmonition(name, variant)}>
+            <Icon className="mr-2 h-4 w-4" />
+            {name}
           </Button>
         ))}
       </div>
+       </div>
 
       <Separator />
 
@@ -160,8 +176,8 @@ export function EditorForm({ article }: { article: Article | null }) {
         <Textarea id="summary" {...register('summary')} placeholder="A concise summary of your article..." />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div>
             <div className="flex justify-between items-center mb-2">
                 <Label>AI-Suggested Titles</Label>
                 <Button type="button" size="sm" variant="outline" onClick={handleSuggestTitles} disabled={isAiPending || !contentValue}>
@@ -183,7 +199,7 @@ export function EditorForm({ article }: { article: Article | null }) {
             )}
         </div>
 
-        <div className="flex-1">
+        <div>
             <div className="flex justify-between items-center mb-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
                 <Button type="button" size="sm" variant="outline" onClick={handleSuggestTags} disabled={isAiPending || !contentValue}>

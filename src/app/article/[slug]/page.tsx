@@ -6,11 +6,10 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CommentSection } from '@/components/comment-section';
 import { getUser } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { ThumbsUp, MessageSquare, Share2 } from 'lucide-react';
 import { ArticleActions } from '@/components/article-actions';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { Callout } from '@/components/ui/callout';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const user = await getUser();
@@ -61,7 +60,20 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         )}
 
         <div className="prose dark:prose-invert max-w-none text-lg">
-          <ReactMarkdown>{article.content}</ReactMarkdown>
+           <ReactMarkdown
+              components={{
+                div: ({ node, ...props }) => {
+                  if (node?.properties?.['data-callout'] === 'true') {
+                    const variant = node?.properties?.['data-variant'] as any;
+                    const icon = node?.properties?.['data-icon'] as string;
+                    return <Callout variant={variant} icon={icon} {...props} />;
+                  }
+                  return <div {...props} />;
+                },
+              }}
+            >
+              {article.content}
+            </ReactMarkdown>
         </div>
 
         <Separator className="my-12" />
