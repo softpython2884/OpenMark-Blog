@@ -5,8 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { AtSign, Calendar, Edit, FileText } from 'lucide-react';
+import { AtSign, Calendar, Edit, FileText, Sparkles, TrendingUp, MessageCircle, ThumbsUp, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
@@ -24,8 +23,45 @@ const createSnippet = (html: string, length: number) => {
   return truncated.substring(0, Math.min(truncated.length, truncated.lastIndexOf(' '))) + '...';
 };
 
+const TopArticleCard = ({ article, reason }: { article: Article, reason: string }) => {
+    const readingTime = calculateReadingTime(article.content);
+    
+    const reasonConfig = {
+        'Latest': { icon: Sparkles, text: 'Latest Post', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' },
+        'Most Liked': { icon: ThumbsUp, text: 'Most Liked', className: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' },
+        'Most Commented': { icon: MessageCircle, text: 'Most Commented', className: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' },
+    }[reason] || { icon: Star, text: reason, className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' };
 
-export function ProfileClientPage({ user, articles, loggedInUser }: { user: User, articles: Article[], loggedInUser: (User & { userId: number }) | null }) {
+    const ReasonIcon = reasonConfig.icon;
+
+    return (
+        <Card className="flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative group overflow-hidden">
+            <Badge className={`absolute top-3 right-3 z-10 ${reasonConfig.className}`}>
+                <ReasonIcon className="mr-1.5 h-3.5 w-3.5" />
+                {reasonConfig.text}
+            </Badge>
+            <Link href={`/article/${article.slug}`} className="block">
+                <CardHeader className="p-0">
+                    <div className="relative aspect-video w-full overflow-hidden">
+                        <Image
+                            src={article.imageUrl || placeholderImages.find(p => p.id === '1')!.imageUrl}
+                            alt={article.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            data-ai-hint={placeholderImages.find(p => p.id === '1')!.imageHint}
+                        />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-grow p-4">
+                    <CardTitle className="font-headline text-xl leading-tight mb-2">{article.title}</CardTitle>
+                </CardContent>
+            </Link>
+        </Card>
+    )
+}
+
+export function ProfileClientPage({ user, articles, topArticles, loggedInUser }: { user: User, articles: Article[], topArticles: Array<Article & { reason: string }>, loggedInUser: (User & { userId: number }) | null }) {
 
   const isOwnProfile = loggedInUser?.id === user.id;
 
@@ -39,6 +75,9 @@ export function ProfileClientPage({ user, articles, loggedInUser }: { user: User
     }
     return `${time.toFixed(2)} min read`;
   }
+  
+  const regularArticles = articles.filter(article => !topArticles.some(top => top.id === article.id));
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -82,10 +121,24 @@ export function ProfileClientPage({ user, articles, loggedInUser }: { user: User
       </header>
 
       <main>
-        <h2 className="text-3xl font-headline font-bold mb-8">Published Articles</h2>
+        {topArticles && topArticles.length > 0 && (
+            <section className="mb-12">
+                <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-3">
+                    <TrendingUp className="h-8 w-8 text-primary" />
+                    Top Articles
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {topArticles.map(article => (
+                        <TopArticleCard key={`top-${article.id}`} article={article} reason={article.reason} />
+                    ))}
+                </div>
+            </section>
+        )}
+
+        <h2 className="text-3xl font-headline font-bold mb-8">All Published Articles</h2>
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {articles.map((article, index) => {
+            {regularArticles.map((article, index) => {
               const readingTime = calculateReadingTime(article.content);
               return (
                 <Card key={article.id} className="flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">

@@ -17,7 +17,7 @@ export default async function ProfilePage({ params }: { params: { id: string } }
         notFound();
     }
     
-    const { user, articles } = profileData;
+    const { user, articles, topArticles } = profileData;
 
-    return <ProfileClientPage user={user} articles={articles} loggedInUser={loggedInUser} />;
+    return <ProfileClientPage user={user} articles={articles} topArticles={topArticles} loggedInUser={loggedInUser} />;
 }
