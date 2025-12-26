@@ -2,10 +2,10 @@
 
 import { z } from 'zod';
 import db from './db';
-import { createSession } from './auth';
+import { createSession, getUser } from './auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Role } from './definitions';
+import { Role, User } from './definitions';
 import { getCommentsByArticleId } from './server-data';
 import bcrypt from 'bcryptjs';
 import { placeholderImages } from './placeholder-images';
@@ -176,6 +176,8 @@ export async function signup(prevState: any, formData: FormData) {
     }
     
     const { name, email, password } = validatedFields.data;
+    let userId: number | bigint;
+    let userRole: Role;
 
     try {
         const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
@@ -184,24 +186,23 @@ export async function signup(prevState: any, formData: FormData) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const defaultRole = 'READER'; 
+        userRole = 'READER'; 
         const defaultAvatar = placeholderImages[Math.floor(Math.random() * placeholderImages.length)].imageUrl;
         
         const stmt = db.prepare('INSERT INTO users (name, email, password, role, avatar_url) VALUES (?, ?, ?, ?, ?)');
-        stmt.run(name, email, hashedPassword, defaultRole, defaultAvatar);
+        const result = stmt.run(name, email, hashedPassword, userRole, defaultAvatar);
+        userId = result.lastInsertRowid;
     } catch (e: any) {
         return { message: `Database Error: ${e.message}` };
     }
     
-    redirect('/login');
+    await createSession({ userId: Number(userId), role: userRole, name });
+    redirect('/');
 }
 
-
-import { getUser } from './auth';
-
 const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
+  email: z.string().email({ message: "Please enter a valid email." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 export async function login(prevState: any, formData: FormData) {
@@ -233,7 +234,7 @@ export async function login(prevState: any, formData: FormData) {
     
     const { password: _, ...userSessionData } = user;
 
-    await createSession({ userId: userSessionData.id, ...userSessionData });
+    await createSession({ userId: userSessionData.id, role: userSessionData.role, name: userSessionData.name });
     
   } catch (error) {
      return { message: 'Something went wrong.' };
