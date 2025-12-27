@@ -13,12 +13,13 @@ import {
   TableCaption
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -31,7 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { deleteArticle } from '@/lib/actions';
+import { deleteArticle, updateArticleVisibility } from '@/lib/actions';
 import { useRouter } from 'next/navigation';
 import { Badge } from './ui/badge';
 
@@ -69,6 +70,17 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
             }
         });
     };
+
+    const handleVisibilityChange = (articleId: number, newVisibility: 'public' | 'private') => {
+        startTransition(async () => {
+         try {
+           await updateArticleVisibility(articleId, newVisibility);
+           toast({ title: 'Success', description: 'Article visibility updated.' });
+         } catch (error: any) {
+           toast({ variant: 'destructive', title: 'Error', description: error.message });
+         }
+       });
+     };
 
     const getStatus = (article: Article) => {
         if (!article.publishedAt) {
@@ -122,6 +134,19 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                                     <Pencil className="mr-2 h-4 w-4" />
                                                     Edit
                                                 </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                {article.visibility === 'private' ? (
+                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'public')} disabled={isPending}>
+                                                     <Eye className="mr-2 h-4 w-4" />
+                                                     Make Public
+                                                  </DropdownMenuItem>
+                                                ) : (
+                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'private')} disabled={isPending}>
+                                                    <EyeOff className="mr-2 h-4 w-4" />
+                                                    Make Private
+                                                  </DropdownMenuItem>
+                                                )}
+                                                <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => openDeleteDialog(article)} className="text-destructive">
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Delete
