@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -106,7 +107,7 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'N/A'}
+                                        {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString('en-CA') : 'N/A'}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>

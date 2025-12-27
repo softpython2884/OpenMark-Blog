@@ -76,7 +76,7 @@ export function ReportManager({ reports }: { reports: Report[] }) {
               </TableCell>
               <TableCell>{report.reason}</TableCell>
               <TableCell>{report.reporterName}</TableCell>
-              <TableCell>{new Date(report.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(report.createdAt).toLocaleDateString('en-CA')}</TableCell>
               <TableCell className="text-right">
                 <div className="flex gap-2 justify-end">
                     <Button

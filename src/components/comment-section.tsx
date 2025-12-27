@@ -167,7 +167,7 @@ const CommentItem = ({ comment, articleId, user, onCommentChange }: { comment: C
                         <div className="flex items-center gap-2 mb-1">
                             <Link href={`/profile/${encodeURIComponent(comment.authorName || '')}`} className="font-semibold hover:underline">{comment.authorName}</Link>
                             <span className="text-xs text-muted-foreground">
-                                &middot; {new Date(comment.createdAt).toLocaleDateString()}
+                                &middot; {new Date(comment.createdAt).toLocaleDateString('en-CA')}
                             </span>
                         </div>
                         <p className="text-foreground/90">{comment.content}</p>

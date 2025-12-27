@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Article, User, BadgeInfo } from '@/lib/definitions';
