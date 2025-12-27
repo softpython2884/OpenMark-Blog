@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Search, Clock, Rss } from 'lucide-react';
+import { ArrowRight, Search, Clock, Rss, ChevronsRight } from 'lucide-react';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -90,42 +90,42 @@ const ArticleCardGrid = ({ article, index }: { article: Article, index: number }
 const ArticleCardList = ({ article, index }: { article: Article, index: number }) => {
     const readingTime = calculateReadingTime(article.content);
     return (
-        <Card key={article.id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <Link href={`/article/${article.slug}`}>
-                <div className={`flex flex-col ${index % 2 === 0 ? 'sm:flex-row' : 'sm:flex-row-reverse'}`}>
-                    <div className="relative w-full sm:w-2/5 aspect-video shrink-0">
-                        <Image
-                          src={article.imageUrl || placeholderImages[(index + 1) % placeholderImages.length].imageUrl}
-                          alt={article.title}
-                          fill
-                          className="object-cover"
-                          data-ai-hint={placeholderImages[(index + 1) % placeholderImages.length].imageHint}
-                        />
-                    </div>
-                    <div className="flex flex-col flex-1 p-6">
+        <Card key={article.id} className="group overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-full">
+            <div className={`flex flex-col ${index % 2 === 0 ? 'sm:flex-row' : 'sm:flex-row-reverse'}`}>
+                <Link href={`/article/${article.slug}`} className="relative w-full sm:w-2/5 aspect-video shrink-0 block">
+                    <Image
+                      src={article.imageUrl || placeholderImages[(index + 1) % placeholderImages.length].imageUrl}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={placeholderImages[(index + 1) % placeholderImages.length].imageHint}
+                    />
+                </Link>
+                <div className="flex flex-col flex-1 p-6">
+                    <Link href={`/article/${article.slug}`}>
                         <CardTitle className="font-headline text-2xl leading-tight mb-2 group-hover:text-primary transition-colors">{article.title}</CardTitle>
-                        <p className="text-muted-foreground text-sm mb-4 flex-grow">{article.summary || createSnippet(article.content, 120)}</p>
-                        <div className="flex justify-between items-end text-sm">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <Link href={`/profile/${encodeURIComponent(article.authorName || '')}`} className="hover:underline flex items-center gap-2">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
-                                        <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <span className="font-semibold text-foreground">{article.authorName}</span>
-                                        <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</div>
-                                    </div>
-                                </Link>
-                            </div>
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{formatReadingTime(readingTime)}</span>
-                            </div>
+                    </Link>
+                    <p className="text-muted-foreground text-sm mb-4 flex-grow">{article.summary || createSnippet(article.content, 120)}</p>
+                    <div className="flex justify-between items-end text-sm">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <Link href={`/profile/${encodeURIComponent(article.authorName || '')}`} className="hover:underline flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
+                                    <AvatarFallback>{article.authorName?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <span className="font-semibold text-foreground">{article.authorName}</span>
+                                    <div className="text-xs">{new Date(article.publishedAt!).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</div>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatReadingTime(readingTime)}</span>
                         </div>
                     </div>
                 </div>
-            </Link>
+            </div>
         </Card>
     );
 };
@@ -148,7 +148,7 @@ export function HomePageClient({ user, articles, followedArticles, recommendedAr
     <div className="container mx-auto px-4 py-8 space-y-16">
       
       {heroArticle && (
-        <section className="w-full hidden md:block">
+        <section className="w-full">
             <div className="relative h-[60vh] md:h-[70vh] w-full rounded-2xl overflow-hidden flex items-center justify-center text-white">
                 <Image
                     src={heroArticle.imageUrl || placeholderImages[0].imageUrl}
@@ -224,6 +224,10 @@ export function HomePageClient({ user, articles, followedArticles, recommendedAr
               ))}
             </CarouselContent>
           </Carousel>
+           <div className="mt-4 flex md:hidden items-center justify-center text-sm text-muted-foreground animate-pulse">
+                <ChevronsRight className="h-4 w-4 mr-2" />
+                <span>Swipe to see more</span>
+            </div>
         </section>
       )}
 
