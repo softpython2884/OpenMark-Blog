@@ -209,7 +209,7 @@ export function HomePageClient({ user, articles, followedArticles, recommendedAr
       
       {userFeed.length > 0 && (
         <section>
-          <h2 className="text-3xl font-headline font-bold mb-8 flex items-center gap-3">
+          <h2 className="text-3xl font-headline font-bold mb-8 flex items-center justify-center gap-3">
               <Rss className="h-7 w-7 text-primary" />
               Your Feed
           </h2>
