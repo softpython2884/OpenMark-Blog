@@ -13,7 +13,7 @@ import {
   TableCaption
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -134,14 +134,18 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                                     <Pencil className="mr-2 h-4 w-4" />
                                                     Edit
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => router.push(`/article/${article.slug}`)} disabled={!article.publishedAt}>
+                                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                                    Visit
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 {article.visibility === 'private' ? (
-                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'public')} disabled={isPending}>
+                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'public')} disabled={isPending || !article.publishedAt}>
                                                      <Eye className="mr-2 h-4 w-4" />
                                                      Make Public
                                                   </DropdownMenuItem>
                                                 ) : (
-                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'private')} disabled={isPending}>
+                                                  <DropdownMenuItem onClick={() => handleVisibilityChange(article.id!, 'private')} disabled={isPending || !article.publishedAt}>
                                                     <EyeOff className="mr-2 h-4 w-4" />
                                                     Make Private
                                                   </DropdownMenuItem>
