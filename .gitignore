@@ -43,3 +43,7 @@ pnpm-debug.log*
 
 # Turbopack
 .turbo
+
+local.db
+local.db-shm
+local.db-wal
