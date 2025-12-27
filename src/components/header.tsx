@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -54,7 +55,7 @@ export function Header({ user }: { user: User | null }) {
               
               <div className="flex-1 flex justify-end items-center gap-2">
                   {canCreate && (
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
                           <Link href="/editor">
                           <PlusCircle className="mr-2 h-4 w-4" />
                           New Post
