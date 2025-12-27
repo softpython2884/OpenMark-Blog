@@ -33,6 +33,7 @@ function initializeDb() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       published_at DATETIME,
       is_featured INTEGER DEFAULT 0,
+      visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private')),
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     );
     
@@ -124,6 +125,11 @@ function initializeDb() {
   if (!articleColumnNames.includes('is_featured')) {
       console.log("Applying migration: Adding 'is_featured' to articles table.");
       db.exec('ALTER TABLE articles ADD COLUMN is_featured INTEGER DEFAULT 0');
+  }
+
+  if (!articleColumnNames.includes('visibility')) {
+      console.log("Applying migration: Adding 'visibility' to articles table.");
+      db.exec("ALTER TABLE articles ADD COLUMN visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private'))");
   }
 
   const commentColumns = db.prepare("PRAGMA table_info(comments)").all();

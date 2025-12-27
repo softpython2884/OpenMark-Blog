@@ -24,6 +24,7 @@ const ArticleSchema = z.object({
         message: "Invalid Imgur link. Please use the direct image link (starting with i.imgur.com). Right-click the image on Imgur and select 'Copy Image Address'.",
     }),
   tags: z.string(), // Comma-separated
+  isPrivate: z.preprocess((val) => val === 'on', z.boolean().default(false)),
 });
 
 function createSlug(title: string) {
@@ -53,8 +54,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
     };
   }
 
-  const { id, title, content, summary, imageUrl, tags } = validatedFields.data;
+  const { id, title, content, summary, imageUrl, tags, isPrivate } = validatedFields.data;
   let slug = createSlug(title);
+  const visibility = isPrivate ? 'private' : 'public';
   
   try {
     db.transaction(() => {
@@ -70,9 +72,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
             }
             
             const stmt = db.prepare(
-                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now'), published_at = datetime('now') WHERE id = ?`
+                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now'), published_at = datetime('now'), visibility = ? WHERE id = ?`
             );
-            stmt.run(title, slug, content, summary || null, imageUrl || null, articleId);
+            stmt.run(title, slug, content, summary || null, imageUrl || null, visibility, articleId);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
         } else {
             const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ?').get(slug);
@@ -80,9 +82,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
                 slug = `${slug}-${Date.now()}`;
             }
             const stmt = db.prepare(
-                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, published_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, published_at, visibility) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)`
             );
-            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id);
+            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, visibility);
             articleId = Number(result.lastInsertRowid);
         }
 
@@ -345,6 +347,7 @@ export async function searchArticles(query: string): Promise<Article[]> {
          OR a.content LIKE ? 
          OR u.name LIKE ? 
          OR t.name LIKE ?
+      AND a.visibility = 'public' AND a.published_at IS NOT NULL
       ORDER BY a.published_at DESC
       LIMIT 10
     `);
@@ -358,7 +361,7 @@ export async function searchArticles(query: string): Promise<Article[]> {
     const articlesDataStmt = db.prepare(`
       SELECT 
         a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
-        u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+        u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt, a.visibility
       FROM articles a
       JOIN users u ON a.author_id = u.id
       WHERE a.id IN (${placeholders})

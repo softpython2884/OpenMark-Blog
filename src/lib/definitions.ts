@@ -45,6 +45,7 @@ export type Article = {
   likes: number;
   isLiked?: boolean;
   isFeatured?: boolean;
+  visibility: 'public' | 'private';
 };
 
 export type Comment = {

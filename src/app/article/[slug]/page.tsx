@@ -23,6 +23,8 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
+  // We don't have user info here, so we can't check for private articles.
+  // This means private articles will still have metadata generated, but the page will block access.
   const article = await getArticleBySlug(params.slug);
 
   if (!article) {

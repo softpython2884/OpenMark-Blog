@@ -16,13 +16,14 @@ import { generateSuggestedTitles } from '@/ai/flows/ai-suggested-title';
 import { suggestTags } from '@/ai/flows/ai-suggested-tags';
 import { saveArticle } from '@/lib/actions';
 import type { Article } from '@/lib/definitions';
-import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link as LinkIcon, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import, Youtube } from 'lucide-react';
+import { Sparkles, Tags, Text, Info, Zap, AlertTriangle, Flame, Type, Heading1, Heading2, Heading3, Italic, Bold, Link as LinkIcon, List, ListOrdered, Quote, Code, Minus, Image as ImageIcon, EyeOff, Milestone, HelpCircle, CheckCircle, Pilcrow, CaseUpper, CaseLower, Strikethrough, Code2, Superscript, Subscript, PictureInPicture, Import, Youtube, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ArticleRenderer } from './article-renderer';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { Switch } from './ui/switch';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -37,6 +38,7 @@ const ArticleFormSchema = z.object({
         message: "Invalid Imgur link. Please use the direct image link (starting with i.imgur.com). Right-click the image on Imgur and select 'Copy Image Address'.",
     }),
   tags: z.string(),
+  isPrivate: z.boolean().default(false),
 });
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
@@ -245,6 +247,7 @@ export function EditorForm({ article }: { article: Article | null }) {
       summary: article?.summary || '',
       imageUrl: article?.imageUrl || '',
       tags: article?.tags.map(t => t.name).join(', ') || '',
+      isPrivate: article?.visibility === 'private',
     },
   });
 
@@ -455,6 +458,29 @@ export function EditorForm({ article }: { article: Article | null }) {
       </div>
 
       <Separator />
+      
+       <Controller
+        control={control}
+        name="isPrivate"
+        render={({ field }) => (
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label htmlFor="isPrivate" className="text-base flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Private Article
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                If checked, this article will only be visible to you.
+              </p>
+            </div>
+            <Switch
+              id="isPrivate"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </div>
+        )}
+      />
 
       <div className="flex justify-end gap-4">
         <Button type="submit" disabled={isSubmitting || isAiPending}>

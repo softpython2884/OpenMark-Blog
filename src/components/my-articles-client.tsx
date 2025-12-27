@@ -69,6 +69,16 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
         });
     };
 
+    const getStatus = (article: Article) => {
+        if (!article.publishedAt) {
+            return { text: 'Draft', variant: 'secondary' as const };
+        }
+        if (article.visibility === 'private') {
+            return { text: 'Private', variant: 'outline' as const };
+        }
+        return { text: 'Published', variant: 'default' as const };
+    }
+
     return (
         <>
             <div className="border rounded-lg">
@@ -85,39 +95,42 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {articles.map((article) => (
-                            <TableRow key={article.id}>
-                                <TableCell className="font-medium">{article.title}</TableCell>
-                                <TableCell>
-                                    <Badge variant={article.publishedAt ? 'default' : 'secondary'}>
-                                        {article.publishedAt ? 'Published' : 'Draft'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'N/A'}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => router.push(`/editor/${article.slug}`)}>
-                                                <Pencil className="mr-2 h-4 w-4" />
-                                                Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => openDeleteDialog(article)} className="text-destructive">
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {articles.map((article) => {
+                            const status = getStatus(article);
+                            return (
+                                <TableRow key={article.id}>
+                                    <TableCell className="font-medium">{article.title}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={status.variant}>
+                                            {status.text}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'N/A'}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => router.push(`/editor/${article.slug}`)}>
+                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => openDeleteDialog(article)} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                 </Table>
             </div>

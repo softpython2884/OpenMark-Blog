@@ -9,10 +9,10 @@ export async function getPublishedArticles(): Promise<Article[]> {
       SELECT 
         a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
         u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt,
-        a.is_featured as isFeatured
+        a.is_featured as isFeatured, a.visibility
       FROM articles a
       JOIN users u ON a.author_id = u.id
-      WHERE a.published_at IS NOT NULL
+      WHERE a.published_at IS NOT NULL AND a.visibility = 'public'
       ORDER BY a.is_featured DESC, a.published_at DESC
     `);
     const articles = articlesStmt.all() as any[];
@@ -44,7 +44,7 @@ export async function getAllPublishedArticlesWithAuthor(): Promise<Partial<Artic
                 u.name as authorName
             FROM articles a
             JOIN users u ON a.author_id = u.id
-            WHERE a.published_at IS NOT NULL
+            WHERE a.published_at IS NOT NULL AND a.visibility = 'public'
             ORDER BY a.published_at DESC
         `);
         const articles = articlesStmt.all() as any[];
@@ -63,7 +63,7 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
             SELECT 
                 a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId,
                 u.name as authorName, u.avatar_url as authorAvatarUrl, a.created_at as createdAt, a.updated_at as updatedAt,
-                a.published_at as publishedAt
+                a.published_at as publishedAt, a.visibility
             FROM articles a
             JOIN users u ON a.author_id = u.id
             WHERE a.slug = ?
@@ -71,6 +71,11 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
         const article = articleStmt.get(slug) as any;
 
         if (!article) return null;
+
+        // If article is private, only the author can see it
+        if (article.visibility === 'private' && article.authorId !== userId) {
+            return null;
+        }
 
         const tagsStmt = db.prepare(`
             SELECT t.id, t.name 
@@ -118,10 +123,11 @@ export async function getArticlesByAuthorId(authorId: number): Promise<Article[]
         const articlesStmt = db.prepare(`
             SELECT 
                 a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
-                u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+                u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt,
+                a.visibility
             FROM articles a
             JOIN users u ON a.author_id = u.id
-            WHERE a.author_id = ? AND a.published_at IS NOT NULL
+            WHERE a.author_id = ?
             ORDER BY a.published_at DESC
         `);
         const articles = articlesStmt.all(authorId) as any[];
@@ -185,17 +191,21 @@ export async function getUserByName(name: string): Promise<User | null> {
     }
 }
 
-async function getFullArticleById(id: number): Promise<Article | null> {
+async function getFullArticleById(id: number, userId?: number): Promise<Article | null> {
     const articleStmt = db.prepare(`
         SELECT 
             a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
-            u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt
+            u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt, a.visibility
         FROM articles a
         JOIN users u ON a.author_id = u.id
         WHERE a.id = ?
     `);
     const article = articleStmt.get(id) as any;
     if (!article) return null;
+
+    if (article.visibility === 'private' && article.authorId !== userId) {
+        return null;
+    }
 
     const tagsStmt = db.prepare(`
         SELECT t.id, t.name 
@@ -215,12 +225,12 @@ export async function getTopArticlesByAuthorId(authorId: number): Promise<Array<
         // 1. Get latest article
         const latestStmt = db.prepare(`
             SELECT id FROM articles 
-            WHERE author_id = ? AND published_at IS NOT NULL 
+            WHERE author_id = ? AND published_at IS NOT NULL AND visibility = 'public'
             ORDER BY published_at DESC LIMIT 1
         `);
         const latest = latestStmt.get(authorId) as { id: number } | undefined;
         if (latest) {
-            const article = await getFullArticleById(latest.id);
+            const article = await getFullArticleById(latest.id, authorId);
             if (article) featuredArticles[article.id] = { ...article, reason: 'Latest' };
         }
 
@@ -229,13 +239,13 @@ export async function getTopArticlesByAuthorId(authorId: number): Promise<Array<
             SELECT a.id, COUNT(l.article_id) as like_count
             FROM articles a
             JOIN likes l ON a.id = l.article_id
-            WHERE a.author_id = ? AND a.published_at IS NOT NULL
+            WHERE a.author_id = ? AND a.published_at IS NOT NULL AND a.visibility = 'public'
             GROUP BY a.id
             ORDER BY like_count DESC LIMIT 1
         `);
         const mostLiked = mostLikedStmt.get(authorId) as { id: number } | undefined;
         if (mostLiked) {
-            const article = await getFullArticleById(mostLiked.id);
+            const article = await getFullArticleById(mostLiked.id, authorId);
             if (article) {
                 if (!featuredArticles[article.id]) {
                     featuredArticles[article.id] = { ...article, reason: 'Most Liked' };
@@ -248,13 +258,13 @@ export async function getTopArticlesByAuthorId(authorId: number): Promise<Array<
             SELECT a.id, COUNT(c.article_id) as comment_count
             FROM articles a
             JOIN comments c ON a.id = c.article_id
-            WHERE a.author_id = ? AND a.published_at IS NOT NULL
+            WHERE a.author_id = ? AND a.published_at IS NOT NULL AND a.visibility = 'public'
             GROUP BY a.id
             ORDER BY comment_count DESC LIMIT 1
         `);
         const mostCommented = mostCommentedStmt.get(authorId) as { id: number } | undefined;
         if (mostCommented) {
-             const article = await getFullArticleById(mostCommented.id);
+             const article = await getFullArticleById(mostCommented.id, authorId);
             if (article) {
                 if (!featuredArticles[article.id]) {
                     featuredArticles[article.id] = { ...article, reason: 'Most Commented' };
@@ -278,12 +288,18 @@ export async function getUserProfileData(userName: string, loggedInUserId?: numb
             return null;
         }
 
-        const articles = await getArticlesByAuthorId(user.id);
+        let articles = await getArticlesByAuthorId(user.id);
+        
+        // If not viewing own profile, filter out private articles
+        if (loggedInUserId !== user.id) {
+            articles = articles.filter(article => article.visibility === 'public' && article.publishedAt);
+        }
+        
         const topArticles = await getTopArticlesByAuthorId(user.id);
         const gamificationData = await calculateGamificationData(user.id);
         
         let isFollowing = false;
-        if (loggedInUserId) {
+        if (loggedInUserId && loggedInUserId !== user.id) {
             const followStmt = db.prepare('SELECT 1 FROM followers WHERE follower_id = ? AND followed_id = ?');
             isFollowing = !!followStmt.get(loggedInUserId, user.id);
         }
@@ -321,7 +337,7 @@ export async function getFollowedArticles(userId: number): Promise<Article[]> {
             FROM articles a
             JOIN users u ON a.author_id = u.id
             JOIN followers f ON a.author_id = f.followed_id
-            WHERE f.follower_id = ? AND a.published_at IS NOT NULL
+            WHERE f.follower_id = ? AND a.published_at IS NOT NULL AND a.visibility = 'public'
             ORDER BY a.published_at DESC
             LIMIT 10
         `);
@@ -368,6 +384,7 @@ export async function getRecommendedArticles(userId: number): Promise<Article[]>
             WHERE at.tag_id IN (${topTagIds.map(() => '?').join(',')})
               AND a.author_id != ?
               AND a.published_at IS NOT NULL
+              AND a.visibility = 'public'
             ORDER BY a.published_at DESC
             LIMIT 20
         `);
@@ -406,7 +423,7 @@ export async function getPendingReports(): Promise<Report[]> {
     const processedReports: Report[] = [];
 
     for (const report of reports) {
-      let itemContent = 'Contenu introuvable';
+      let itemContent = 'Content not found';
       let itemUrl = '#';
 
       if (report.type === 'article') {
