@@ -21,9 +21,22 @@ export async function generateMetadata(
     }
   }
 
+  const previousImages = (await parent).openGraph?.images || []
+
   return {
     title: user.name,
     description: user.bio || `Check out the profile of ${user.name} on OpenMark Blog.`,
+    openGraph: {
+        title: user.name,
+        description: user.bio || `Check out the profile of ${user.name} on OpenMark Blog.`,
+        images: [user.avatarUrl, ...previousImages],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: user.name,
+      description: user.bio || `Check out the profile of ${user.name} on OpenMark Blog.`,
+      images: [user.avatarUrl],
+    },
   }
 }
 

@@ -23,21 +23,37 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  // We don't have user info here, so we can't check for private articles.
-  // This means private articles will still have metadata generated, but the page will block access.
-  const article = await getArticleBySlug(params.slug);
+  const user = await getUser();
+  const article = await getArticleBySlug(params.slug, user?.id);
 
   if (!article) {
     return {
       title: 'Article Not Found',
     };
   }
+  
+  if (article.visibility === 'private') {
+    return {
+      title: 'Article Not Found',
+      robots: { index: false, follow: false },
+    }
+  }
+
+  const previousImages = (await parent).openGraph?.images || []
 
   return {
     title: article.title,
     description: article.summary,
     openGraph: {
-        images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl],
+        title: article.title,
+        description: article.summary || '',
+        images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl, ...previousImages],
+    },
+     twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: article.summary || '',
+      images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl],
     },
   };
 }
@@ -46,7 +62,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const user = await getUser();
   const article = await getArticleBySlug(params.slug, user?.id);
 
-  if (!article) {
+  if (!article || article.visibility === 'private') {
     notFound();
   }
   

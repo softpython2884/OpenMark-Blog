@@ -12,6 +12,14 @@ export const metadata: Metadata = {
     template: '%s | OpenMark Blog',
   },
   description: 'A modern, open-source blogging platform.',
+  openGraph: {
+    title: 'OpenMark Blog',
+    description: 'A modern, open-source blogging platform.',
+    images: ['/og-image.png'], // You should create a default OG image
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default async function RootLayout({
@@ -27,6 +35,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body className={cn('font-body antialiased h-full flex flex-col')}>
         <ThemeProvider

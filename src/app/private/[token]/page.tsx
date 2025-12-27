@@ -13,14 +13,35 @@ import { ArticleRenderer } from '@/components/article-renderer';
 import { calculateReadingTime } from '@/lib/utils';
 import { Clock } from 'lucide-react';
 import Link from 'next/link';
-import { Metadata } from 'next';
+import { Metadata, ResolvingMetadata } from 'next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Eye } from 'lucide-react';
 
-export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+type Props = {
+  params: { token: string };
+};
+
+export async function generateMetadata({ params }: Props, parent: ResolvingMetadata): Promise<Metadata> {
   const article = await getArticleByShareToken(params.token);
-  if (!article) return { title: 'Private Article' };
-  return { title: `[Private] ${article.title}`, robots: { index: false, follow: false } };
+  if (!article) return { title: 'Private Article', robots: { index: false, follow: false } };
+
+  const previousImages = (await parent).openGraph?.images || []
+
+  return { 
+    title: `[Private] ${article.title}`, 
+    robots: { index: false, follow: false },
+    openGraph: {
+        title: `[Private] ${article.title}`,
+        description: article.summary || '',
+        images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl, ...previousImages],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `[Private] ${article.title}`,
+      description: article.summary || '',
+      images: [article.imageUrl || placeholderImages[article.id % placeholderImages.length].imageUrl],
+    },
+  };
 }
 
 export default async function PrivateArticlePage({ params }: { params: { token: string } }) {
