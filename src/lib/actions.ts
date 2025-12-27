@@ -128,13 +128,14 @@ export async function deleteArticle(articleId: number) {
         throw new Error("The article does not exist.");
     }
 
-    if (article.author_id !== user.id && user.role !== 'ADMIN') {
+    if (article.author_id !== user.id && user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
         throw new Error("You are not authorized to delete this article.");
     }
 
     try {
         db.prepare('DELETE FROM articles WHERE id = ?').run(articleId);
         revalidatePath('/my-articles');
+        revalidatePath('/admin');
         revalidatePath('/');
         return { success: true };
     } catch (e: any) {
@@ -224,6 +225,10 @@ export async function updateUserRole(userId: number, role: Role) {
     }
     if (user.id === userId) {
         throw new Error('You cannot change your own role.');
+    }
+
+    if (user.role === 'MODERATOR' && (role === 'ADMIN' || role === 'EDITOR')) {
+        throw new Error('Moderators cannot assign Admin or Editor roles.');
     }
 
     try {
@@ -441,18 +446,19 @@ export async function updateProfile(prevState: any, formData: FormData) {
   redirect(`/profile/${encodeURIComponent(name)}`);
 }
 
-export async function setFeaturedArticle(articleId: number) {
+export async function setFeaturedArticle(articleId: number, isFeatured: boolean) {
     const user = await getUser();
-    if (!user || user.role !== 'ADMIN') {
-        throw new Error('Permission denied: Only admins can feature articles.');
+    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
+        throw new Error('Permission denied.');
     }
 
     try {
         db.transaction(() => {
-            // First, un-feature all other articles
-            db.prepare('UPDATE articles SET is_featured = 0').run();
-            // Then, feature the selected one
-            db.prepare('UPDATE articles SET is_featured = 1 WHERE id = ?').run(articleId);
+            if (isFeatured) {
+                // Un-feature all others first
+                db.prepare('UPDATE articles SET is_featured = 0').run();
+            }
+            db.prepare('UPDATE articles SET is_featured = ? WHERE id = ?').run(isFeatured ? 1 : 0, articleId);
         })();
         
         revalidatePath('/');
@@ -533,5 +539,22 @@ export async function updateReportStatus(reportId: number, status: 'resolved' | 
         return { success: true };
     } catch (e: any) {
         return { success: false, message: `Database Error: ${e.message}` };
+    }
+}
+
+export async function updateArticleVisibility(articleId: number, visibility: 'public' | 'private') {
+    const user = await getUser();
+    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
+        throw new Error('Permission denied.');
+    }
+
+    try {
+        db.prepare('UPDATE articles SET visibility = ? WHERE id = ?').run(visibility, articleId);
+        revalidatePath('/admin');
+        revalidatePath(`/article/${db.prepare('SELECT slug FROM articles WHERE id = ?').get(articleId)}`);
+        return { success: true };
+    } catch (e: any) {
+        console.error("Database error while updating visibility:", e);
+        throw new Error("Database error while updating visibility.");
     }
 }

@@ -3,7 +3,7 @@ import { getUser } from "@/lib/auth";
 import { getAllUsers, getAllPublishedArticlesWithAuthor, getPendingReports } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { UserRoleManager } from "@/components/user-role-manager";
-import { FeaturedArticleManager } from "@/components/featured-article-manager";
+import { ArticleManager } from "@/components/article-manager";
 import { ReportManager } from "@/components/report-manager";
 import { Metadata } from 'next';
 
@@ -21,6 +21,7 @@ export default async function AdminPage() {
     const users = await getAllUsers();
     const articles = await getAllPublishedArticlesWithAuthor();
     const reports = await getPendingReports();
+    const isModerator = user.role === 'MODERATOR';
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -37,13 +38,13 @@ export default async function AdminPage() {
                     <UserRoleManager users={users} currentUser={user} />
                 </section>
                 
-                {user.role === 'ADMIN' && (
-                    <section>
-                        <h2 className="text-2xl font-semibold mb-4">Featured Article</h2>
-                        <p className="text-muted-foreground mb-4">Select an article to feature in the hero section of the homepage.</p>
-                        <FeaturedArticleManager articles={articles} />
-                    </section>
-                )}
+                <section>
+                    <h2 className="text-2xl font-semibold mb-4">Article Management</h2>
+                    <p className="text-muted-foreground mb-4">
+                        Manage articles, feature one on the homepage, or change their visibility.
+                    </p>
+                    <ArticleManager articles={articles} />
+                </section>
             </div>
         </div>
     );

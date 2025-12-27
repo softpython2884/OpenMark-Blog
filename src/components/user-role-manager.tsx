@@ -22,7 +22,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
-const roles: Role[] = ['ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER', 'SUSPENDED'];
+const adminRoles: Role[] = ['ADMIN', 'EDITOR', 'AUTHOR', 'MODERATOR', 'READER', 'SUSPENDED'];
+const moderatorRoles: Role[] = ['AUTHOR', 'READER', 'SUSPENDED'];
 
 export function UserRoleManager({ users, currentUser }: { users: User[], currentUser: User }) {
   const [isPending, startTransition] = useTransition();
@@ -49,6 +50,8 @@ export function UserRoleManager({ users, currentUser }: { users: User[], current
       }
     });
   };
+
+  const availableRoles = currentUser.role === 'ADMIN' ? adminRoles : moderatorRoles;
 
   return (
     <div className="border rounded-lg">
@@ -88,8 +91,8 @@ export function UserRoleManager({ users, currentUser }: { users: User[], current
                         <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                        {roles.map((role) => (
-                        <SelectItem key={role} value={role}>
+                        {availableRoles.map((role) => (
+                        <SelectItem key={role} value={role} disabled={!availableRoles.includes(role)}>
                             {role}
                         </SelectItem>
                         ))}
