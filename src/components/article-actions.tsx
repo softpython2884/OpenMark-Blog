@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
   DialogDescription,
@@ -149,6 +148,10 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
       });
       setIsEmbedDialogOpen(false);
   }
+  
+  const onDropdownSelect = (event: Event) => {
+    event.preventDefault();
+  }
 
   return (
     <div className="flex items-center justify-between">
@@ -157,7 +160,12 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
             <span>{likes} {likes === 1 ? 'Like' : 'Likes'}</span>
         </Button>
         
-        <Dialog>
+        <Dialog open={isEmbedDialogOpen || isReportDialogOpen} onOpenChange={(open) => {
+          if (!open) {
+            setIsEmbedDialogOpen(false);
+            setIsReportDialogOpen(false);
+          }
+        }}>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline">
@@ -165,7 +173,7 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
                         Share
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" onSelect={onDropdownSelect}>
                     <DropdownMenuItem onClick={() => shareOn('twitter')}>
                         <Twitter className="mr-2 h-4 w-4" />
                         <span>Share on X</span>
@@ -179,22 +187,17 @@ export function ArticleActions({ articleId, initialLikes, initialIsLiked }: { ar
                         <span>Copy Link</span>
                     </DropdownMenuItem>
                     
-                    <DialogTrigger asChild onSelect={(e) => { e.preventDefault(); setIsEmbedDialogOpen(true); }}>
-                        <DropdownMenuItem>
-                            <Code2 className="mr-2 h-4 w-4" />
-                            <span>Embed</span>
-                        </DropdownMenuItem>
-                    </DialogTrigger>
+                    <DropdownMenuItem onSelect={() => setIsEmbedDialogOpen(true)}>
+                        <Code2 className="mr-2 h-4 w-4" />
+                        <span>Embed</span>
+                    </DropdownMenuItem>
                     
                     <DropdownMenuSeparator />
-
-                    <DialogTrigger asChild onSelect={(e) => { e.preventDefault(); setIsReportDialogOpen(true); }}>
-                        <DropdownMenuItem className="text-destructive">
-                            <Flag className="mr-2 h-4 w-4" />
-                            <span>Report</span>
-                        </DropdownMenuItem>
-                     </DialogTrigger>
-
+                    
+                    <DropdownMenuItem onSelect={() => setIsReportDialogOpen(true)} className="text-destructive">
+                        <Flag className="mr-2 h-4 w-4" />
+                        <span>Report</span>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 

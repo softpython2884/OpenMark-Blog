@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, Controller } from 'react-hook-form';
@@ -38,7 +39,7 @@ const ArticleFormSchema = z.object({
         message: "Invalid Imgur link. Please use the direct image link (starting with i.imgur.com). Right-click the image on Imgur and select 'Copy Image Address'.",
     }),
   tags: z.string(),
-  isPrivate: z.boolean().default(false),
+  isPrivate: z.preprocess((val) => val === 'on', z.boolean().default(false)),
 });
 
 type ArticleFormData = z.infer<typeof ArticleFormSchema>;
@@ -181,6 +182,9 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
         if (!wasPastedAsRichText && !rawContent.match(/<[a-z][\s\S]*>/i)) {
              processedContent = marked.parse(processedContent, { breaks: true, gfm: true });
         }
+        
+        // Clean up any citation artifacts
+        processedContent = processedContent.replace(/:contentReference\[.*?\]\{.*?\}/g, '');
 
         onImport(processedContent);
         toast({ title: 'Content Imported!', description: 'The content has been converted to HTML.' });
