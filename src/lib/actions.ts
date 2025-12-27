@@ -58,15 +58,20 @@ export async function saveArticle(prevState: any, formData: FormData) {
   const { id, title, content, summary, imageUrl, tags, isPrivate } = validatedFields.data;
   let slug = createSlug(title);
   const visibility = isPrivate ? 'private' : 'public';
-  const shareToken = isPrivate ? crypto.randomBytes(6).toString('hex') : null;
   
   try {
     db.transaction(() => {
         let articleId: number;
         if (id) {
             articleId = Number(id);
-            const existingSlug = db.prepare('SELECT slug FROM articles WHERE id = ?').get(articleId) as {slug: string};
-            if(existingSlug.slug !== slug){
+            const existingArticle = db.prepare('SELECT slug, visibility FROM articles WHERE id = ?').get(articleId) as {slug: string, visibility: string};
+            
+            // Generate new token only if visibility changes to private
+            const shareToken = isPrivate && existingArticle.visibility !== 'private'
+                ? crypto.randomBytes(6).toString('hex') 
+                : (isPrivate ? db.prepare('SELECT share_token FROM articles WHERE id = ?').get(articleId)?.share_token : null);
+
+            if(existingArticle.slug !== slug){
                 const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ? and id !=?').get(slug, articleId);
                  if (slugCheck) {
                     slug = `${slug}-${Date.now()}`;
@@ -79,6 +84,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
             stmt.run(title, slug, content, summary || null, imageUrl || null, visibility, shareToken, articleId);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
         } else {
+            const shareToken = isPrivate ? crypto.randomBytes(6).toString('hex') : null;
             const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ?').get(slug);
             if (slugCheck) {
                 slug = `${slug}-${Date.now()}`;
