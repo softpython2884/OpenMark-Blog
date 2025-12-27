@@ -46,6 +46,7 @@ export type Article = {
   isLiked?: boolean;
   isFeatured?: boolean;
   visibility: 'public' | 'private';
+  shareToken?: string | null;
 };
 
 export type Comment = {

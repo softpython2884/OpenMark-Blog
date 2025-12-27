@@ -10,6 +10,7 @@ import { Role, User, Article } from './definitions';
 import { getCommentsByArticleId } from './server-data';
 import bcrypt from 'bcryptjs';
 import { placeholderImages } from './placeholder-images';
+import crypto from 'crypto';
 
 const ArticleSchema = z.object({
   id: z.string().optional(),
@@ -57,6 +58,7 @@ export async function saveArticle(prevState: any, formData: FormData) {
   const { id, title, content, summary, imageUrl, tags, isPrivate } = validatedFields.data;
   let slug = createSlug(title);
   const visibility = isPrivate ? 'private' : 'public';
+  const shareToken = isPrivate ? crypto.randomBytes(6).toString('hex') : null;
   
   try {
     db.transaction(() => {
@@ -72,9 +74,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
             }
             
             const stmt = db.prepare(
-                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now'), published_at = datetime('now'), visibility = ? WHERE id = ?`
+                `UPDATE articles SET title = ?, slug = ?, content = ?, summary = ?, image_url = ?, updated_at = datetime('now'), published_at = datetime('now'), visibility = ?, share_token = ? WHERE id = ?`
             );
-            stmt.run(title, slug, content, summary || null, imageUrl || null, visibility, articleId);
+            stmt.run(title, slug, content, summary || null, imageUrl || null, visibility, shareToken, articleId);
             db.prepare('DELETE FROM article_tags WHERE article_id = ?').run(articleId);
         } else {
             const slugCheck = db.prepare('SELECT id FROM articles WHERE slug = ?').get(slug);
@@ -82,9 +84,9 @@ export async function saveArticle(prevState: any, formData: FormData) {
                 slug = `${slug}-${Date.now()}`;
             }
             const stmt = db.prepare(
-                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, published_at, visibility) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)`
+                `INSERT INTO articles (title, slug, content, summary, image_url, author_id, published_at, visibility, share_token) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)`
             );
-            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, visibility);
+            const result = stmt.run(title, slug, content, summary || null, imageUrl || null, user.id, visibility, shareToken);
             articleId = Number(result.lastInsertRowid);
         }
 
@@ -544,14 +546,32 @@ export async function updateReportStatus(reportId: number, status: 'resolved' | 
 
 export async function updateArticleVisibility(articleId: number, visibility: 'public' | 'private') {
     const user = await getUser();
-    if (!user || !['ADMIN', 'MODERATOR'].includes(user.role)) {
+    if (!user) {
         throw new Error('Permission denied.');
+    }
+    
+    const article = db.prepare('SELECT author_id FROM articles WHERE id = ?').get(articleId) as { author_id: number } | undefined;
+    if (!article) {
+        throw new Error('Article not found.');
+    }
+    
+    const isOwner = user.id === article.author_id;
+    const isAdminOrMod = ['ADMIN', 'MODERATOR'].includes(user.role);
+
+    if (!isOwner && !isAdminOrMod) {
+        throw new Error('You do not have permission to change this article\'s visibility.');
     }
 
     try {
-        db.prepare('UPDATE articles SET visibility = ? WHERE id = ?').run(visibility, articleId);
+        const shareToken = visibility === 'private' ? crypto.randomBytes(6).toString('hex') : null;
+        db.prepare('UPDATE articles SET visibility = ?, share_token = ? WHERE id = ?').run(visibility, shareToken, articleId);
+        
         revalidatePath('/admin');
-        revalidatePath(`/article/${db.prepare('SELECT slug FROM articles WHERE id = ?').get(articleId)}`);
+        revalidatePath('/my-articles');
+        const slug = db.prepare('SELECT slug FROM articles WHERE id = ?').get(articleId) as { slug: string };
+        if (slug) {
+            revalidatePath(`/article/${slug.slug}`);
+        }
         return { success: true };
     } catch (e: any) {
         console.error("Database error while updating visibility:", e);

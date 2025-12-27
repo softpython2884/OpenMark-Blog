@@ -13,7 +13,7 @@ import {
   TableCaption
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,6 +82,15 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
        });
      };
 
+     const handleCopyPrivateLink = (shareToken: string) => {
+        const privateUrl = `${window.location.origin}/private/${shareToken}`;
+        navigator.clipboard.writeText(privateUrl);
+        toast({
+            title: 'Private Link Copied!',
+            description: 'The shareable link for your private article has been copied.'
+        });
+     }
+
     const getStatus = (article: Article) => {
         if (!article.publishedAt) {
             return { text: 'Draft', variant: 'secondary' as const };
@@ -149,6 +158,12 @@ export function MyArticlesClient({ articles }: { articles: Article[] }) {
                                                     <EyeOff className="mr-2 h-4 w-4" />
                                                     Make Private
                                                   </DropdownMenuItem>
+                                                )}
+                                                {article.visibility === 'private' && article.shareToken && (
+                                                    <DropdownMenuItem onClick={() => handleCopyPrivateLink(article.shareToken!)}>
+                                                        <LinkIcon className="mr-2 h-4 w-4" />
+                                                        Copy Private Link
+                                                    </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => openDeleteDialog(article)} className="text-destructive">

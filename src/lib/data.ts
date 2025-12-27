@@ -41,11 +41,11 @@ export async function getAllPublishedArticlesWithAuthor(): Promise<Partial<Artic
     try {
         const articlesStmt = db.prepare(`
             SELECT 
-                a.id, a.title, a.slug, a.is_featured as isFeatured,
+                a.id, a.title, a.slug, a.is_featured as isFeatured, a.visibility,
                 u.name as authorName
             FROM articles a
             JOIN users u ON a.author_id = u.id
-            WHERE a.published_at IS NOT NULL AND a.visibility = 'public'
+            WHERE a.published_at IS NOT NULL
             ORDER BY a.published_at DESC
         `);
         const articles = articlesStmt.all() as any[];
@@ -119,13 +119,48 @@ export async function getArticleBySlug(slug: string, userId?: number): Promise<A
     }
 }
 
+export async function getArticleByShareToken(token: string): Promise<Article | null> {
+    try {
+        const articleStmt = db.prepare(`
+            SELECT 
+                a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId,
+                u.name as authorName, u.avatar_url as authorAvatarUrl, a.created_at as createdAt, a.updated_at as updatedAt,
+                a.published_at as publishedAt, a.visibility
+            FROM articles a
+            JOIN users u ON a.author_id = u.id
+            WHERE a.share_token = ? AND a.visibility = 'private'
+        `);
+        const article = articleStmt.get(token) as any;
+
+        if (!article) return null;
+        
+        const tagsStmt = db.prepare(`
+            SELECT t.id, t.name 
+            FROM tags t
+            JOIN article_tags at ON t.id = at.tag_id
+            WHERE at.article_id = ?
+        `);
+        article.tags = tagsStmt.all(article.id);
+
+        const likesStmt = db.prepare('SELECT COUNT(*) as count FROM likes WHERE article_id = ?');
+        article.likes = (likesStmt.get(article.id) as { count: number }).count;
+        
+        // Note: We don't check for likes for shared articles, as the viewer might not be logged in.
+        
+        return article as Article;
+    } catch (err) {
+        console.error('Database Error:', err);
+        throw new Error('Failed to fetch article by share token.');
+    }
+}
+
 export async function getArticlesByAuthorId(authorId: number): Promise<Article[]> {
     try {
         const articlesStmt = db.prepare(`
             SELECT 
                 a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
                 u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt,
-                a.visibility
+                a.visibility, a.share_token as shareToken
             FROM articles a
             JOIN users u ON a.author_id = u.id
             WHERE a.author_id = ?

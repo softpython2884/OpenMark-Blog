@@ -34,6 +34,7 @@ function initializeDb() {
       published_at DATETIME,
       is_featured INTEGER DEFAULT 0,
       visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private')),
+      share_token TEXT UNIQUE,
       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
     );
     
@@ -130,6 +131,11 @@ function initializeDb() {
   if (!articleColumnNames.includes('visibility')) {
       console.log("Applying migration: Adding 'visibility' to articles table.");
       db.exec("ALTER TABLE articles ADD COLUMN visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'private'))");
+  }
+
+  if (!articleColumnNames.includes('share_token')) {
+    console.log("Applying migration: Adding 'share_token' to articles table.");
+    db.exec("ALTER TABLE articles ADD COLUMN share_token TEXT UNIQUE");
   }
 
   const commentColumns = db.prepare("PRAGMA table_info(comments)").all();
