@@ -3,17 +3,18 @@ import db from './db';
 import type { Article, User, Comment, Tag, Report } from './definitions';
 import { calculateGamificationData } from './gamification';
 
-export async function getPublishedArticles(): Promise<Article[]> {
+export async function getPublishedArticles(userId?: number): Promise<Article[]> {
   try {
     const articlesStmt = db.prepare(`
       SELECT 
         a.id, a.title, a.slug, a.content, a.summary, a.image_url as imageUrl, a.author_id as authorId, 
         u.name as authorName, u.avatar_url as authorAvatarUrl, a.published_at as publishedAt,
-        a.is_featured as isFeatured, a.visibility
+        a.is_featured as isFeatured, a.visibility,
+        (SELECT COUNT(*) FROM likes WHERE article_id = a.id) as likes
       FROM articles a
       JOIN users u ON a.author_id = u.id
       WHERE a.published_at IS NOT NULL AND a.visibility = 'public'
-      ORDER BY a.is_featured DESC, a.published_at DESC
+      ORDER BY DATE(a.published_at) DESC, likes DESC, a.published_at DESC
     `);
     const articles = articlesStmt.all() as any[];
 
