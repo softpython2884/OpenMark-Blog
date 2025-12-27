@@ -47,8 +47,8 @@ Welcome to OpenMark, a modern, open-source blogging platform built with a powerf
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/your-repo-name.git
-    cd your-repo-name
+    git clone https://github.com/softpython2884/OpenMark-Blog.git
+    cd "OpenMark Blog"
     ```
 
 2.  **Install dependencies**:
@@ -108,16 +108,13 @@ Placeholder images are managed in `src/lib/placeholder-images.json`. You can rep
 
 ## ☁️ Deployment
 
-This Next.js application is configured for easy deployment on platforms that support Node.js, such as Vercel, Netlify, or Firebase App Hosting.
+This Next.js application is configured for easy deployment on platforms that support Node.js.
 
 ### Key Considerations:
 
 1.  **Environment Variables**: Ensure you set the `JWT_SECRET` and `GEMINI_API_KEY` environment variables in your hosting provider's dashboard.
-2.  **Database**: This project uses SQLite for local development. For production, you will need to switch to a managed database service like Vercel Postgres, Supabase, or Firebase Firestore and update the database connection logic in `src/lib/db.ts` and `src/lib/data.ts`.
+2.  **Database**: This project uses SQLite for local development.
 3.  **Build Command**: The standard build command is `npm run build`.
 4.  **Start Command**: The start command is `npm start`.
-5.  **Firebase App Hosting**: An `apphosting.yaml` file is included, configured for deployment on Firebase App Hosting.
 
 ---
-
-Built with ❤️ in Firebase Studio.
