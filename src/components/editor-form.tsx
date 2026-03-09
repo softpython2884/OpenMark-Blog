@@ -27,6 +27,7 @@ import DOMPurify from 'dompurify';
 import { Switch } from './ui/switch';
 import { BlockEditor } from './editor/BlockEditor';
 import { PDFGenerator } from './pdf/PDFGenerator';
+import { VintagePDFGenerator } from './vintage/VintagePDFGenerator';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
