@@ -122,6 +122,7 @@ export function SpoilerBlock({ block, onUpdate, onDelete }: SpoilerBlockProps) {
                       variant={contentEditor?.isActive('superscript') ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => contentEditor?.chain().focus().toggleSuperscript().run()}
+                      disabled={true}
                     >
                       <Superscript className="h-4 w-4" />
                     </Button>
@@ -129,6 +130,7 @@ export function SpoilerBlock({ block, onUpdate, onDelete }: SpoilerBlockProps) {
                       variant={contentEditor?.isActive('subscript') ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => contentEditor?.chain().focus().toggleSubscript().run()}
+                      disabled={true}
                     >
                       <Subscript className="h-4 w-4" />
                     </Button>

@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, X, Clock, CheckCircle, Circle } from 'lucide-react';
+import { Plus, X, Clock, CheckCircle, Circle, Bold, Italic, Strikethrough, Code, Superscript, Subscript } from 'lucide-react';
 import { useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 interface TimelineItem {
   id: string;
@@ -66,6 +68,17 @@ export function TimelineBlock({ block, onUpdate, onDelete }: TimelineBlockProps)
     setIsEditing(false);
   };
 
+  const createEditor = (content: string, onUpdate: (html: string) => void) => {
+    return useEditor({
+      extensions: [StarterKit],
+      content,
+      onUpdate: ({ editor }) => {
+        onUpdate(editor.getHTML());
+      },
+      immediatelyRender: false,
+    });
+  };
+
   if (isEditing) {
     return (
       <Card className="border-2 border-dashed border-gray-300">
@@ -79,56 +92,110 @@ export function TimelineBlock({ block, onUpdate, onDelete }: TimelineBlockProps)
             </div>
 
             <div className="space-y-4">
-              {items.map((item, index) => (
-                <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">Étape {index + 1}</h4>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeItem(item.id)}
-                      disabled={items.length <= 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <Label htmlFor={`title-${item.id}`}>Titre</Label>
-                      <Input
-                        id={`title-${item.id}`}
-                        placeholder="Titre de l'étape"
-                        value={item.title}
-                        onChange={(e) => updateItem(item.id, 'title', e.target.value)}
-                      />
+              {items.map((item, index) => {
+                const contentEditor = createEditor(item.content, (html) => updateItem(item.id, 'content', html));
+                const titleEditor = createEditor(`<p>${item.title}</p>`, (html) => updateItem(item.id, 'title', item.title));
+
+                return (
+                  <div key={item.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium">Étape {index + 1}</h4>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeItem(item.id)}
+                        disabled={items.length <= 1}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                     
-                    <div>
-                      <Label htmlFor={`content-${item.id}`}>Description</Label>
-                      <Textarea
-                        id={`content-${item.id}`}
-                        placeholder="Description détaillée de l'étape"
-                        value={item.content}
-                        onChange={(e) => updateItem(item.id, 'content', e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`completed-${item.id}`}
-                        checked={item.completed || false}
-                        onChange={(e) => updateItem(item.id, 'completed', e.target.checked)}
-                      />
-                      <Label htmlFor={`completed-${item.id}`} className="text-sm">
-                        Étape complétée
-                      </Label>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor={`title-${item.id}`}>Titre</Label>
+                        <div className="border rounded-md p-2 bg-white">
+                          <EditorContent 
+                            editor={titleEditor}
+                            placeholder="Titre de l'étape"
+                            className="min-h-[40px] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`content-${item.id}`}>Description</Label>
+                        <div className="border-b pb-3 mb-3">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Button
+                              variant={contentEditor?.isActive('bold') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleBold().run()}
+                            >
+                              <Bold className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={contentEditor?.isActive('italic') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleItalic().run()}
+                            >
+                              <Italic className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={contentEditor?.isActive('strike') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleStrike().run()}
+                            >
+                              <Strikethrough className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={contentEditor?.isActive('code') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleCode().run()}
+                            >
+                              <Code className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={contentEditor?.isActive('superscript') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleSuperscript().run()}
+                              disabled={true}
+                            >
+                              <Superscript className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant={contentEditor?.isActive('subscript') ? 'default' : 'ghost'}
+                              size="sm"
+                              onClick={() => contentEditor?.chain().focus().toggleSubscript().run()}
+                              disabled={true}
+                            >
+                              <Subscript className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-3 bg-white min-h-[100px]">
+                          <EditorContent 
+                            editor={contentEditor}
+                            placeholder="Description détaillée de l'étape"
+                            className="focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`completed-${item.id}`}
+                          checked={item.completed || false}
+                          onChange={(e) => updateItem(item.id, 'completed', e.target.checked)}
+                        />
+                        <Label htmlFor={`completed-${item.id}`} className="text-sm">
+                          Étape complétée
+                        </Label>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               <Button 
                 variant="outline" 
@@ -192,7 +259,9 @@ export function TimelineBlock({ block, onUpdate, onDelete }: TimelineBlockProps)
               <div className="flex-1 min-w-0">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-lg mb-2">{item.title}</h4>
-                  <div className="text-gray-700 whitespace-pre-wrap">{item.content}</div>
+                  <div className="text-gray-700 prose prose-sm max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: item.content }} />
+                  </div>
                 </div>
               </div>
             </div>
