@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 export interface VintagePage {
   content: PageContent;
@@ -174,106 +175,16 @@ export class VintageProcessor {
         advertisements: content.advertisements.slice(currentAdIndex, currentAdIndex + 1) // 1 pub par page
       };
 
-      pages.push(pageContent);
+      pages.push({
+        pageNumber,
+        content: pageContent
+      });
       currentParagraphIndex += 8;
       currentImageIndex += 2;
       currentAdIndex += 1;
     }
 
     return [page1, ...pages];
-  }
-
-  /**
-   * Applique les filtres vintage à une image
-   */
-  private async applyVintageFilters(imageBuffer: Buffer): Promise<Buffer> {
-    const image = await loadImage(imageBuffer);
-    const canvas = createCanvas(image.width, image.height);
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return imageBuffer;
-
-    // Appliquer le filtre sépia
-    ctx.filter = 'sepia(100%)';
-    ctx.drawImage(image, 0, 0);
-
-    // Appliquer le vieillissement
-    ctx.filter = 'contrast(120%) brightness(95%)';
-    ctx.drawImage(image, 0, 0);
-
-    // Ajouter du grain subtil
-    const imageData = ctx.getImageData(0, 0, image.width, image.height);
-    const data = imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const noise = Math.random() * 30 - 15;
-      data[i] = Math.min(255, Math.max(0, data[i] + noise));
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
-    }
-
-    ctx.putImageData(imageData, 0, 0);
-
-    return canvas.toBuffer('image/jpeg', 0.8);
-  }
-
-  /**
-   * Génère le HTML pour une page spécifique
-   */
-  private generatePageHTML(page: PageContent): string {
-    const templateStyles = this.getTemplateStyles();
-    
-    return `
-      <div class="newspaper-page">
-        <div class="header">
-          ${page.title ? `
-            <div class="page-title">${page.title}</div>
-          ` : ''}
-          <div class="date-bar">
-            <span>Vol. XIV — No. 42</span>
-            <span>Blackwater, West Elizabeth</span>
-          </div>
-        </div>
-        
-        ${page.paragraphs.length > 0 ? `
-          <div class="content-layout">
-            <main class="main-article">
-              ${page.paragraphs.map((p: string) => `<p>${this.processText(p)}</p>`).join('')}
-            </main>
-          </div>
-        ` : ''}
-        
-        ${page.images.length > 0 ? `
-          <div class="content-layout">
-            ${page.images.map((img: ImageInfo) => `
-              <figure class="article-image">
-                <img src="${img.src}" alt="${img.alt}" />
-                ${img.caption ? `<figcaption>${img.caption}</figcaption>` : ''}
-              </figure>
-            `).join('')}
-          </div>
-        ` : ''}
-        
-        ${page.advertisements.length > 0 ? `
-          <div class="sidebar">
-            ${page.advertisements.map((ad: string) => `
-              <div class="ad-box">
-                <h3>${ad}</h3>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-        
-        <div class="footer">
-          Généré par OpenMark Blog • ${new Date().toLocaleDateString('fr-FR', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </div>
-      </div>
-    `;
   }
 
   /**
@@ -401,14 +312,14 @@ export class VintageProcessor {
     const pages = this.calculatePageDistribution(analyzedContent);
 
     // Générer le HTML pour chaque page
-    const pageHTMLs = pages.map(page => this.generatePageHTML(page));
+    const pageHTMLs = pages.map(page => this.generatePageHTML(page.content));
 
     return {
       pages: pages.map((page, index) => ({
         content: page.content,
         pageNumber: index + 1,
         totalPages: pages.length,
-        template: this.template
+        template: this.template as 'blackwater-ledger' | 'le-figaro' | 'le-monde' | 'liberation'
       })),
       metadata: {
         title: analyzedContent.title,
