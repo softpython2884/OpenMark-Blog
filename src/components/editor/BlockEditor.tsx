@@ -141,6 +141,8 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         return <TimelineBlock {...blockProps} />;
       case 'video':
         return <VideoBlock {...blockProps} />;
+      case 'callout':
+        return <CalloutBlock {...blockProps} />;
       default:
         return (
           <Card key={block.id} className="border border-dashed">
