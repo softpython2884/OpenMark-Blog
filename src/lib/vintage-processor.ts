@@ -284,7 +284,7 @@ export class VintageProcessor {
     return text
       .replace(/"/g, '«')
       .replace(/"/g, '»')
-      .replace(/'/g, ''')
+      .replace(/'/g, "'")
       .replace(/…/g, '...');
   }
 
@@ -390,7 +390,7 @@ export class VintageProcessor {
       `
     };
 
-    return styles[this.template] || styles['blackwater-ledger'];;
+    return (styles as Record<string, string>)[this.template] || styles['blackwater-ledger'];
   }
 
   /**

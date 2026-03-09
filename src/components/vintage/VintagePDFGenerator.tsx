@@ -31,6 +31,7 @@ export function VintagePDFGenerator({ content, title, author, imageUrl }: Vintag
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
   const [options, setOptions] = useState<VintageOptions>({
     template: 'blackwater-ledger',
     fontSize: 'medium',
@@ -72,7 +73,7 @@ export function VintagePDFGenerator({ content, title, author, imageUrl }: Vintag
         URL.revokeObjectURL(url);
         
         setIsOpen(false);
-        useToast({
+        toast({
           title: "PDF Vintage Généré !",
           description: "Le fichier HTML a été généré avec succès.",
         });
@@ -81,7 +82,7 @@ export function VintagePDFGenerator({ content, title, author, imageUrl }: Vintag
       }
     } catch (error) {
       console.error('Vintage PDF generation error:', error);
-      useToast({
+      toast({
         title: "Erreur de Génération",
         description: "Impossible de générer le PDF vintage.",
         variant: "destructive",
@@ -93,7 +94,7 @@ export function VintagePDFGenerator({ content, title, author, imageUrl }: Vintag
   };
 
   const getTemplateDescription = (template: string): string => {
-    const descriptions = {
+    const descriptions: Record<string, string> = {
       'blackwater-ledger': '📰 The Blackwater Ledger - Style journal 1899 avec papier vieilli',
       'le-figaro': '📰 Le Figaro - Élégance moderne avec bordures rouges',
       'le-monde': '🌍 Le Monde - Design sobre et professionnel',
@@ -103,7 +104,7 @@ export function VintagePDFGenerator({ content, title, author, imageUrl }: Vintag
   };
 
   const getQualityDescription = (quality: string): string => {
-    const descriptions = {
+    const descriptions: Record<string, string> = {
       'draft': 'Brouillon - Génération rapide',
       'normal': 'Normal - Qualité standard',
       'high': 'Haute - Qualité premium'
