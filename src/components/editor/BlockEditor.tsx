@@ -9,6 +9,11 @@ import { SpoilerBlock } from './blocks/SpoilerBlock';
 import { TimelineBlock } from './blocks/TimelineBlock';
 import { VideoBlock } from './blocks/VideoBlock';
 import { CalloutBlock } from './blocks/CalloutBlock';
+import { BulletListBlock } from './blocks/BulletListBlock';
+import { OrderedListBlock } from './blocks/OrderedListBlock';
+import { BlockquoteBlock } from './blocks/BlockquoteBlock';
+import { CodeBlock } from './blocks/CodeBlock';
+import { DividerBlock } from './blocks/DividerBlock';
 import { BlockPalette } from './sidebar/BlockPalette';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -93,6 +98,32 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
                 </div>
               </div>`
             : '';
+        case 'bulletList':
+          return block.content.items && block.content.items.length > 0
+            ? `<ul>${block.content.items.map((item: string) => `<li>${item}</li>`).join('')}</ul>`
+            : '';
+        case 'orderedList':
+          return block.content.items && block.content.items.length > 0
+            ? `<ol>${block.content.items.map((item: string) => `<li>${item}</li>`).join('')}</ol>`
+            : '';
+        case 'blockquote':
+          return block.content.content
+            ? `<blockquote class="border-l-4 border-gray-300 pl-4 italic text-gray-700">
+                <div>${block.content.content}</div>
+                ${block.content.author ? `<footer class="mt-2 text-sm text-gray-600">— ${block.content.author}</footer>` : ''}
+              </blockquote>`
+            : '';
+        case 'code':
+          return block.content.code
+            ? `<div class="bg-gray-100 border rounded-lg">
+                <div class="px-3 py-2 border-b bg-gray-200">
+                  <span class="text-sm font-medium">${block.content.language || 'javascript'}</span>
+                </div>
+                <pre class="p-4 overflow-x-auto"><code>${block.content.code}</code></pre>
+              </div>`
+            : '';
+        case 'divider':
+          return '<hr class="border-gray-300" />';
         default:
           return '';
       }
@@ -153,6 +184,16 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         return <VideoBlock {...blockProps} />;
       case 'callout':
         return <CalloutBlock {...blockProps} />;
+      case 'bulletList':
+        return <BulletListBlock {...blockProps} />;
+      case 'orderedList':
+        return <OrderedListBlock {...blockProps} />;
+      case 'blockquote':
+        return <BlockquoteBlock {...blockProps} />;
+      case 'code':
+        return <CodeBlock {...blockProps} />;
+      case 'divider':
+        return <DividerBlock {...blockProps} />;
       default:
         return (
           <Card key={block.id} className="border border-dashed">
