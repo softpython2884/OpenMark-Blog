@@ -188,6 +188,65 @@ export class VintageProcessor {
   }
 
   /**
+   * Génère le HTML pour une page spécifique
+   */
+  private generatePageHTML(page: PageContent): string {
+    const templateStyles = this.getTemplateStyles();
+    
+    return `
+      <div class="newspaper-page">
+        <div class="header">
+          ${page.title ? `
+            <div class="page-title">${page.title}</div>
+          ` : ''}
+          <div class="date-bar">
+            <span>Vol. XIV — No. 42</span>
+            <span>Blackwater, West Elizabeth</span>
+          </div>
+        </div>
+        
+        ${page.paragraphs.length > 0 ? `
+          <div class="content-layout">
+            <main class="main-article">
+              ${page.paragraphs.map((p: string) => `<p>${this.processText(p)}</p>`).join('')}
+            </main>
+          </div>
+        ` : ''}
+        
+        ${page.images.length > 0 ? `
+          <div class="content-layout">
+            ${page.images.map((img: ImageInfo) => `
+              <figure class="article-image">
+                <img src="${img.src}" alt="${img.alt}" />
+                ${img.caption ? `<figcaption>${img.caption}</figcaption>` : ''}
+              </figure>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        ${page.advertisements.length > 0 ? `
+          <div class="sidebar">
+            ${page.advertisements.map((ad: string) => `
+              <div class="ad-box">
+                <h3>${ad}</h3>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+        
+        <div class="footer">
+          Généré par OpenMark Blog • ${new Date().toLocaleDateString('fr-FR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Traite le texte pour le style vintage
    */
   private processText(text: string): string {
