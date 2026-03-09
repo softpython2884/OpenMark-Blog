@@ -15,7 +15,8 @@ export type BlockType =
   | 'code'
   | 'divider'
   | 'spoiler'
-  | 'timeline';
+  | 'timeline'
+  | 'video';
 
 export interface BlockDefinition {
   type: BlockType;
