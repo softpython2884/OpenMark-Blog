@@ -8,6 +8,7 @@ import { ImageBlock } from './blocks/ImageBlock';
 import { SpoilerBlock } from './blocks/SpoilerBlock';
 import { TimelineBlock } from './blocks/TimelineBlock';
 import { VideoBlock } from './blocks/VideoBlock';
+import { CalloutBlock } from './blocks/CalloutBlock';
 import { BlockPalette } from './sidebar/BlockPalette';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,6 +68,20 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         case 'video':
           return block.content.videoId
             ? `<iframe width="560" height="315" src="https://www.youtube.com/embed/${block.content.videoId}" title="${block.content.title || 'YouTube video player'}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+            : '';
+        case 'callout':
+          return block.content.content
+            ? `<div data-callout data-variant="${block.content.variant || 'note'}">
+                <div class="callout-content">
+                  <strong>${block.content.variant === 'note' ? 'Note' : 
+                             block.content.variant === 'tip' ? 'Astuce' :
+                             block.content.variant === 'warning' ? 'Attention' :
+                             block.content.variant === 'danger' ? 'Danger' :
+                             block.content.variant === 'question' ? 'Question' :
+                             block.content.variant === 'success' ? 'Succès' : 'Info'}:</strong>
+                  <div>${block.content.content.replace(/\n/g, '<br>')}</div>
+                </div>
+              </div>`
             : '';
         default:
           return '';
