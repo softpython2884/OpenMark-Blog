@@ -235,6 +235,7 @@ export function EditorForm({ article }: { article: Article | null }) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isImportDialogOpen, setImportDialogOpen] = useState(false);
+  const [useBlockEditor, setUseBlockEditor] = useState(false);
   
   const {
     register,
@@ -371,41 +372,66 @@ export function EditorForm({ article }: { article: Article | null }) {
       
       <div>
         <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="content" className="text-lg">Content (HTML)</Label>
-            <Dialog open={isImportDialogOpen} onOpenChange={setImportDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                        <Import className="mr-2 h-4 w-4" />
-                        Import Content
-                    </Button>
-                </DialogTrigger>
-                <ImportDialog onImport={handleImport} closeDialog={() => setImportDialogOpen(false)} />
-            </Dialog>
-        </div>
-        <Tabs defaultValue="edit" className="w-full">
-          <TabsList>
-            <TabsTrigger value="edit">Edit</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
-          </TabsList>
-          <TabsContent value="edit">
-            <SnippetToolbar onInsert={handleInsertSnippet} />
-            <Controller
-              name="content"
-              control={control}
-              render={({ field }) => (
-                <Textarea
-                  {...field}
-                  ref={contentTextareaRef}
-                  placeholder="Write your article content here.&#10;This field supports full HTML. For best results with AI, ask for the output directly in HTML.&#10;You can also use custom callouts with the syntax [VARIANT:Your text here] when importing."
-                  className="min-h-[400px] font-mono text-sm"
+            <Label htmlFor="content" className="text-lg">Content</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span>HTML</span>
+                <Switch
+                  checked={useBlockEditor}
+                  onCheckedChange={setUseBlockEditor}
                 />
-              )}
-            />
-          </TabsContent>
-          <TabsContent value="preview" className="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[400px]">
-            <ArticleRenderer content={contentValue} />
-          </TabsContent>
-        </Tabs>
+                <span>Blocks</span>
+              </div>
+              <Dialog open={isImportDialogOpen} onOpenChange={setImportDialogOpen}>
+                  <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                          <Import className="mr-2 h-4 w-4" />
+                          Import Content
+                      </Button>
+                  </DialogTrigger>
+                  <ImportDialog onImport={handleImport} closeDialog={() => setImportDialogOpen(false)} />
+              </Dialog>
+            </div>
+        </div>
+        
+        {useBlockEditor ? (
+          <Controller
+            name="content"
+            control={control}
+            render={({ field }) => (
+              <BlockEditor 
+                initialContent={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        ) : (
+          <Tabs defaultValue="edit" className="w-full">
+            <TabsList>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+            </TabsList>
+            <TabsContent value="edit">
+              <SnippetToolbar onInsert={handleInsertSnippet} />
+              <Controller
+                name="content"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    {...field}
+                    ref={contentTextareaRef}
+                    placeholder="Write your article content here.&#10;This field supports full HTML. For best results with AI, ask for the output directly in HTML.&#10;You can also use custom callouts with the syntax [VARIANT:Your text here] when importing."
+                    className="min-h-[400px] font-mono text-sm"
+                  />
+                )}
+              />
+            </TabsContent>
+            <TabsContent value="preview" className="prose dark:prose-invert max-w-none p-4 border rounded-md min-h-[400px]">
+              <ArticleRenderer content={contentValue} />
+            </TabsContent>
+          </Tabs>
+        )}
+        
         {errors.content && <p className="text-destructive text-sm mt-1">{errors.content.message}</p>}
       </div>
 
