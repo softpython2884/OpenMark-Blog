@@ -5,6 +5,8 @@ import { Block, BlockType, createBlock } from './blocks/BlockTypes';
 import { TextBlock } from './blocks/TextBlock';
 import { HeadingBlock } from './blocks/HeadingBlock';
 import { ImageBlock } from './blocks/ImageBlock';
+import { SpoilerBlock } from './blocks/SpoilerBlock';
+import { TimelineBlock } from './blocks/TimelineBlock';
 import { BlockPalette } from './sidebar/BlockPalette';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,6 +42,26 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         case 'image':
           return block.content.src 
             ? `<img src="${block.content.src}" alt="${block.content.alt || ''}" />${block.content.caption ? `<p><em>${block.content.caption}</em></p>` : ''}`
+            : '';
+        case 'spoiler':
+          return block.content.title && block.content.content 
+            ? `<details>
+                <summary>${block.content.title}</summary>
+                <div>${block.content.content.replace(/\n/g, '<br>')}</div>
+              </details>`
+            : '';
+        case 'timeline':
+          return block.content.items && block.content.items.length > 0
+            ? `<div class="timeline">
+                ${block.content.items.map((item: any) => `
+                  <div class="timeline-item">
+                    <div class="timeline-content">
+                      <h4>${item.title}</h4>
+                      <p>${item.content.replace(/\n/g, '<br>')}</p>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>`
             : '';
         default:
           return '';
