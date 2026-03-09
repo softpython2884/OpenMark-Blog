@@ -7,6 +7,7 @@ import { HeadingBlock } from './blocks/HeadingBlock';
 import { ImageBlock } from './blocks/ImageBlock';
 import { SpoilerBlock } from './blocks/SpoilerBlock';
 import { TimelineBlock } from './blocks/TimelineBlock';
+import { VideoBlock } from './blocks/VideoBlock';
 import { BlockPalette } from './sidebar/BlockPalette';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

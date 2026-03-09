@@ -96,6 +96,13 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     }
   },
   {
+    type: 'video',
+    label: 'Vidéo',
+    icon: 'Youtube',
+    description: 'Intégrer une vidéo YouTube',
+    defaultProps: { videoUrl: '', videoId: '', title: '' }
+  },
+  {
     type: 'divider',
     label: 'Séparateur',
     icon: 'Minus',
