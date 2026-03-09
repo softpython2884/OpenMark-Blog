@@ -193,7 +193,7 @@ export default function LegalPage() {
                 </h3>
                 <div className="space-y-1 text-sm">
                   <p><strong>General:</strong> contact@openmark.blog</p>
-                  <p><strong>Legal:</strong> legal@openmark.blog</p>
+                  <p><strong>Legal:</strong> contact@forgenet.fr</p>
                   <p><strong>Privacy:</strong> privacy@openmark.blog</p>
                   <p><strong>Support:</strong> support@openmark.blog</p>
                 </div>

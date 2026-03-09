@@ -199,7 +199,7 @@ export default function TermsOfServicePage() {
             </p>
             <div className="bg-muted p-4 rounded-md">
               <p className="font-semibold">Legal Contact</p>
-              <p className="text-sm">Email: legal@openmark.blog</p>
+              <p className="text-sm">Email: contact@forgenet.fr</p>
               <p className="text-sm">Response Time: Within 30 days</p>
             </div>
             
