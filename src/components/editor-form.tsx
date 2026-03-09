@@ -26,6 +26,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { Switch } from './ui/switch';
 import { BlockEditor } from './editor/BlockEditor';
+import { PDFGenerator } from './pdf/PDFGenerator';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -517,6 +518,12 @@ export function EditorForm({ article }: { article: Article | null }) {
         <Button type="submit" disabled={isSubmitting || isAiPending}>
             {isSubmitting ? 'Saving...' : 'Save Article'}
         </Button>
+        <PDFGenerator 
+          content={contentValue} 
+          title={watch('title')} 
+          author={user?.name || 'OpenMark Blog'}
+          imageUrl={watch('imageUrl')}
+        />
       </div>
       {state?.message && !state.errors && <p className="text-green-600">{state.message}</p>}
     </form>
