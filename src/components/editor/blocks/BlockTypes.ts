@@ -16,7 +16,8 @@ export type BlockType =
   | 'divider'
   | 'spoiler'
   | 'timeline'
-  | 'video';
+  | 'video'
+  | 'callout';
 
 export interface BlockDefinition {
   type: BlockType;
@@ -101,6 +102,13 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: 'Youtube',
     description: 'Intégrer une vidéo YouTube',
     defaultProps: { videoUrl: '', videoId: '', title: '' }
+  },
+  {
+    type: 'callout',
+    label: 'Callout',
+    icon: 'Info',
+    description: 'Message encadré avec icône',
+    defaultProps: { variant: 'note', content: 'Votre message...' }
   },
   {
     type: 'divider',
