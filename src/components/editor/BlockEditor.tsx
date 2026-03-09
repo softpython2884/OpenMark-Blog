@@ -115,6 +115,10 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         return <HeadingBlock {...blockProps} />;
       case 'image':
         return <ImageBlock {...blockProps} />;
+      case 'spoiler':
+        return <SpoilerBlock {...blockProps} />;
+      case 'timeline':
+        return <TimelineBlock {...blockProps} />;
       default:
         return (
           <Card key={block.id} className="border border-dashed">
