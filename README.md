@@ -79,7 +79,7 @@ The database is seeded with three default users to facilitate testing and develo
 
 -   **Admin**:
     -   **Email**: `admin@example.com`
-    -   **Password**: `admin`
+    -   **Password**: `admin123`
 -   **Author**:
     -   **Email**: `author@example.com`
     -   **Password**: `author`

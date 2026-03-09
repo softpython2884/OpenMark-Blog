@@ -206,7 +206,7 @@ function initializeDb() {
       INSERT INTO users (name, email, role, avatar_url, password) VALUES (?, ?, ?, ?, ?)
     `);
     
-    const adminPassword = bcrypt.hashSync('admin', 10);
+    const adminPassword = bcrypt.hashSync('admin123', 10);
     const authorPassword = bcrypt.hashSync('author', 10);
     const readerPassword = bcrypt.hashSync('reader', 10);
 
