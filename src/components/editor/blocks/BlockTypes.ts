@@ -13,7 +13,9 @@ export type BlockType =
   | 'orderedList'
   | 'blockquote'
   | 'code'
-  | 'divider';
+  | 'divider'
+  | 'spoiler'
+  | 'timeline';
 
 export interface BlockDefinition {
   type: BlockType;
@@ -72,6 +74,25 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     icon: 'Code',
     description: 'Bloc de code',
     defaultProps: { code: '// Votre code ici', language: 'javascript' }
+  },
+  {
+    type: 'spoiler',
+    label: 'Spoiler',
+    icon: 'EyeOff',
+    description: 'Contenu caché révélé au clic',
+    defaultProps: { title: 'Spoiler', content: 'Contenu caché...' }
+  },
+  {
+    type: 'timeline',
+    label: 'Timeline',
+    icon: 'Clock',
+    description: 'Séquence d\'étapes',
+    defaultProps: { 
+      items: [
+        { id: '1', title: 'Étape 1', content: 'Description de la première étape', completed: false },
+        { id: '2', title: 'Étape 2', content: 'Description de la deuxième étape', completed: false }
+      ]
+    }
   },
   {
     type: 'divider',

@@ -235,7 +235,7 @@ export function EditorForm({ article }: { article: Article | null }) {
   const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
   const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isImportDialogOpen, setImportDialogOpen] = useState(false);
-  const [useBlockEditor, setUseBlockEditor] = useState(false);
+  const [useBlockEditor, setUseBlockEditor] = useState(true);
   
   const {
     register,

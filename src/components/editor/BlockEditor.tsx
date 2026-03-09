@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Block, BlockType, createBlock } from './blocks/BlockTypes';
 import { TextBlock } from './blocks/TextBlock';
 import { HeadingBlock } from './blocks/HeadingBlock';
@@ -29,26 +29,9 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
     return [];
   });
 
-  const updateBlock = (updatedBlock: Block) => {
-    setBlocks(prevBlocks => 
-      prevBlocks.map(block => 
-        block.id === updatedBlock.id ? updatedBlock : block
-      )
-    );
-    updateContent();
-  };
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const deleteBlock = (blockId: string) => {
-    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
-    updateContent();
-  };
-
-  const addBlock = (blockType: BlockType) => {
-    const newBlock = createBlock(blockType);
-    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
-  };
-
-  const updateContent = () => {
+  const updateContent = useCallback(() => {
     const html = blocks.map(block => {
       switch (block.type) {
         case 'text':
@@ -64,6 +47,35 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
     }).join('\n');
     
     onChange(html);
+  }, [blocks, onChange]);
+
+  const updateBlock = useCallback((updatedBlock: Block) => {
+    setBlocks(prevBlocks => 
+      prevBlocks.map(block => 
+        block.id === updatedBlock.id ? updatedBlock : block
+      )
+    );
+    
+    // Debounce pour éviter trop de mises à jour
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(updateContent, 500);
+  }, [updateContent]);
+
+  const deleteBlock = useCallback((blockId: string) => {
+    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
+    
+    // Debounce pour éviter trop de mises à jour
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(updateContent, 500);
+  }, [updateContent]);
+
+  const addBlock = (blockType: BlockType) => {
+    const newBlock = createBlock(blockType);
+    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
   };
 
   const renderBlock = (block: Block) => {
