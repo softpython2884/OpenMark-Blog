@@ -64,6 +64,10 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
                 `).join('')}
               </div>`
             : '';
+        case 'video':
+          return block.content.videoId
+            ? `<iframe width="560" height="315" src="https://www.youtube.com/embed/${block.content.videoId}" title="${block.content.title || 'YouTube video player'}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+            : '';
         default:
           return '';
       }
@@ -120,6 +124,8 @@ export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps)
         return <SpoilerBlock {...blockProps} />;
       case 'timeline':
         return <TimelineBlock {...blockProps} />;
+      case 'video':
+        return <VideoBlock {...blockProps} />;
       default:
         return (
           <Card key={block.id} className="border border-dashed">

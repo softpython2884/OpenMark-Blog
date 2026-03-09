@@ -3,7 +3,7 @@
 import { BLOCK_DEFINITIONS, BlockType, createBlock } from '../blocks/BlockTypes';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Type, Heading1, Image, List, ListOrdered, Quote, Code, Minus, EyeOff, Clock } from 'lucide-react';
+import { Type, Heading1, Image, List, ListOrdered, Quote, Code, Minus, EyeOff, Clock, Youtube } from 'lucide-react';
 
 interface BlockPaletteProps {
   onAddBlock: (blockType: BlockType) => void;
@@ -19,6 +19,7 @@ const ICON_MAP = {
   Code,
   EyeOff,
   Clock,
+  Youtube,
   Minus,
 };
 
