@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Block, BlockType, createBlock } from './blocks/BlockTypes';
 import { TextBlock } from './blocks/TextBlock';
 import { HeadingBlock } from './blocks/HeadingBlock';
@@ -23,17 +23,27 @@ interface BlockEditorProps {
 export function BlockEditor({ initialContent = '', onChange }: BlockEditorProps) {
   const [blocks, setBlocks] = useState<Block[]>(() => {
     // Si du contenu initial existe, essayer de le parser en blocks
-    if (initialContent) {
+    if (initialContent && initialContent.trim()) {
       return [{
         id: 'initial-block',
         type: 'text',
         content: { html: initialContent }
       }];
     }
-    return [];
+    // Sinon, créer un block texte par défaut pour éviter la validation vide
+    return [{
+      id: 'default-block',
+      type: 'text',
+      content: { html: '<p>Commencez à écrire votre article ici...</p>' }
+    }];
   });
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Générer le contenu initial immédiatement au montage
+  useEffect(() => {
+    updateContent();
+  }, []);
 
   const updateContent = useCallback(() => {
     const html = blocks.map(block => {
