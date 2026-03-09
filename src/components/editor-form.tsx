@@ -28,6 +28,7 @@ import { Switch } from './ui/switch';
 import { BlockEditor } from './editor/BlockEditor';
 import { PDFGenerator } from './pdf/PDFGenerator';
 import { VintagePDFGenerator } from './vintage/VintagePDFGenerator';
+import { getUser } from '@/lib/auth';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
@@ -231,6 +232,7 @@ function ImportDialog({ onImport, closeDialog }: { onImport: (content: string) =
 
 
 export function EditorForm({ article }: { article: Article | null }) {
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
   const [state, formAction] = useActionState(saveArticle, null);
   const [isAiPending, startAiTransition] = useTransition();
