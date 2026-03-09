@@ -4,10 +4,11 @@ import { Block } from './BlockTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { Eye, EyeOff, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, EyeOff, X, ChevronDown, ChevronUp, Bold, Italic, Link, Strikethrough, Code, Superscript, Subscript } from 'lucide-react';
 import { useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 interface SpoilerBlockProps {
   block: Block;
@@ -20,6 +21,28 @@ export function SpoilerBlock({ block, onUpdate, onDelete }: SpoilerBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [title, setTitle] = useState(block.content.title || 'Spoiler');
   const [content, setContent] = useState(block.content.content || '');
+
+  const contentEditor = useEditor({
+    extensions: [
+      StarterKit,
+    ],
+    content: content,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+    immediatelyRender: false,
+  });
+
+  const titleEditor = useEditor({
+    extensions: [
+      StarterKit,
+    ],
+    content: `<p>${title}</p>`,
+    onUpdate: ({ editor }) => {
+      setTitle(editor.getText());
+    },
+    immediatelyRender: false,
+  });
 
   const handleSave = () => {
     onUpdate({
@@ -54,23 +77,70 @@ export function SpoilerBlock({ block, onUpdate, onDelete }: SpoilerBlockProps) {
             <div className="space-y-3">
               <div>
                 <Label htmlFor="spoilerTitle">Titre du spoiler</Label>
-                <Input
-                  id="spoilerTitle"
-                  placeholder="Cliquez pour révéler..."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
+                <div className="border rounded-md p-2 bg-white">
+                  <EditorContent 
+                    editor={titleEditor}
+                    placeholder="Cliquez pour révéler..."
+                    className="min-h-[40px] focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div>
                 <Label htmlFor="spoilerContent">Contenu caché</Label>
-                <Textarea
-                  id="spoilerContent"
-                  placeholder="Le contenu qui sera révélé..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={4}
-                />
+                <div className="border-b pb-3 mb-3">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <Button
+                      variant={contentEditor?.isActive('bold') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleBold().run()}
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contentEditor?.isActive('italic') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleItalic().run()}
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contentEditor?.isActive('strike') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleStrike().run()}
+                    >
+                      <Strikethrough className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contentEditor?.isActive('code') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleCode().run()}
+                    >
+                      <Code className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contentEditor?.isActive('superscript') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleSuperscript().run()}
+                    >
+                      <Superscript className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={contentEditor?.isActive('subscript') ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => contentEditor?.chain().focus().toggleSubscript().run()}
+                    >
+                      <Subscript className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="border rounded-md p-3 bg-white min-h-[150px]">
+                  <EditorContent 
+                    editor={contentEditor}
+                    placeholder="Le contenu qui sera révélé..."
+                    className="focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
 
@@ -126,7 +196,7 @@ export function SpoilerBlock({ block, onUpdate, onDelete }: SpoilerBlockProps) {
               <span className="text-sm text-green-600 font-medium">Contenu révélé</span>
             </div>
             <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
+              <div dangerouslySetInnerHTML={{ __html: content }} />
             </div>
           </div>
         )}
