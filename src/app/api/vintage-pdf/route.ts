@@ -24,6 +24,16 @@ export async function POST(request: NextRequest) {
     // Ajouter les styles du template
     const templateStyles = processor.getTemplateStyles();
     
+    // Générer une date d'époque réaliste
+    const currentDate = new Date();
+    const epochDate = new Date(1899, 4, 10 + Math.floor(Math.random() * 20)); // Mai 1899 + aléatoire
+    const formattedDate = epochDate.toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
     // Créer le HTML complet avec toutes les pages
     const finalHTML = `
       <!DOCTYPE html>
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
           <!-- En-tête du Journal -->
           <header>
             <div class="header-info">
-              <span>Vol. XIV. — No. 42</span>
+              <span>Vol. XIV. — No. ${42 + Math.floor(Math.random() * 10)}</span>
               <span>Blackwater, West Elizabeth</span>
               <span>Prix : 2 Cents</span>
             </div>
@@ -61,15 +71,15 @@ export async function POST(request: NextRequest) {
             
             <div class="date-bar">
               <span>Édition du Matin</span>
-              <span>Mercredi 10 Mai 1899</span>
+              <span>${formattedDate}</span>
               <span>Dieu Sauve le Peuple</span>
             </div>
           </header>
 
           <!-- Titres -->
           <div class="headline-container">
-            <h2 class="main-headline">Carnage sur le Ferry !</h2>
-            <h3 class="sub-headline">Un braquage audacieux tourne au bain de sang. Les détectives de la Pinkerton interviennent. Le redoutable gang de Van der Linde pointé du doigt.</h3>
+            <h2 class="main-headline">${processedContent.metadata.title}</h2>
+            <h3 class="sub-headline">${processedContent.pages[0]?.content.paragraphs[0]?.substring(0, 150) || 'Une nouvelle extraordinaire secoue la région...'}</h3>
           </div>
 
           <!-- Corps du Journal -->
@@ -96,10 +106,10 @@ export async function POST(request: NextRequest) {
               <div class="wanted-poster">
                 <div class="wanted-title">WANTED</div>
                 <div style="font-family: 'Playfair Display', serif; font-weight: bold; letter-spacing: 2px;">DEAD OR ALIVE</div>
-                <div class="wanted-name">Dutch van der Linde</div>
-                <p style="font-size: 0.9em; font-style: italic;">Pour meurtre, vol à main armée, sédition et attaque de train.</p>
+                <div class="wanted-name">${processedContent.metadata.author}</div>
+                <p style="font-size: 0.9em; font-style: italic;">Pour publication d'articles exceptionnels et contributions remarquables.</p>
                 <div class="wanted-price">$1,000 REWARD</div>
-                <p style="font-size: 0.8em;">Approchez avec une extrême prudence. L'individu est lourdement armé, très charismatique, et ne voyage jamais seul.</p>
+                <p style="font-size: 0.8em;">Approchez avec une extrême prudence. L'individu est lourdement talentueux, très créatif, et ne voyage jamais seul.</p>
               </div>
               
               <!-- Publicité d'époque -->
