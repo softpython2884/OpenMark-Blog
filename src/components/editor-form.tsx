@@ -525,6 +525,12 @@ export function EditorForm({ article }: { article: Article | null }) {
           author={user?.name || 'OpenMark Blog'}
           imageUrl={watch('imageUrl')}
         />
+        <VintagePDFGenerator 
+          content={contentValue} 
+          title={watch('title')} 
+          author={user?.name || 'OpenMark Blog'}
+          imageUrl={watch('imageUrl')}
+        />
       </div>
       {state?.message && !state.errors && <p className="text-green-600">{state.message}</p>}
     </form>

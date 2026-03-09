@@ -220,32 +220,32 @@ export class VintageProcessor {
   /**
    * Génère le HTML pour une page spécifique
    */
-  private generatePageHTML(page: VintagePage['content']): string {
+  private generatePageHTML(page: PageContent): string {
     const templateStyles = this.getTemplateStyles();
     
     return `
       <div class="newspaper-page">
         <div class="header">
-          ${page.content.title ? `
-            <div class="page-title">${page.content.title}</div>
+          ${page.title ? `
+            <div class="page-title">${page.title}</div>
           ` : ''}
           <div class="date-bar">
-            <span>Vol. XIV — No. ${42 + page.pageNumber}</span>
+            <span>Vol. XIV — No. 42</span>
             <span>Blackwater, West Elizabeth</span>
           </div>
         </div>
         
-        ${page.content.paragraphs.length > 0 ? `
+        ${page.paragraphs.length > 0 ? `
           <div class="content-layout">
             <main class="main-article">
-              ${page.content.paragraphs.map(p => `<p>${this.processText(p)}</p>`).join('')}
+              ${page.paragraphs.map((p: string) => `<p>${this.processText(p)}</p>`).join('')}
             </main>
           </div>
         ` : ''}
         
-        ${page.content.images.length > 0 ? `
+        ${page.images.length > 0 ? `
           <div class="content-layout">
-            ${page.content.images.map(img => `
+            ${page.images.map((img: ImageInfo) => `
               <figure class="article-image">
                 <img src="${img.src}" alt="${img.alt}" />
                 ${img.caption ? `<figcaption>${img.caption}</figcaption>` : ''}
@@ -254,9 +254,9 @@ export class VintageProcessor {
           </div>
         ` : ''}
         
-        ${page.content.advertisements.length > 0 ? `
+        ${page.advertisements.length > 0 ? `
           <div class="sidebar">
-            ${page.content.advertisements.map(ad => `
+            ${page.advertisements.map((ad: string) => `
               <div class="ad-box">
                 <h3>${ad}</h3>
               </div>
@@ -291,7 +291,7 @@ export class VintageProcessor {
   /**
    * Retourne les styles CSS selon le template
    */
-  private getTemplateStyles(): string {
+  public getTemplateStyles(): string {
     const styles = {
       'blackwater-ledger': `
         body { 
@@ -390,7 +390,7 @@ export class VintageProcessor {
       `
     };
 
-    return styles[this.template] || styles['blackwater-ledger'];
+    return styles[this.template] || styles['blackwater-ledger'];;
   }
 
   /**
