@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { Switch } from './ui/switch';
+import { BlockEditor } from './editor/BlockEditor';
 
 const ArticleFormSchema = z.object({
   id: z.string().optional(),
