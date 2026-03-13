@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Database, Eye, UserRights, Mail, Server } from 'lucide-react';
+import { Shield, Database, Eye, UserCheck, Mail, Server } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - OpenMark Blog',
@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <UserRights className="h-5 w-5" />
+              <UserCheck className="h-5 w-5" />
               Your Rights (GDPR Compliance)
             </CardTitle>
           </CardHeader>

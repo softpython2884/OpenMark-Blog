@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { VintageProcessor } from '@/lib/vintage-processor';
 import { getUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
