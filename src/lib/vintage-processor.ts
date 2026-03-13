@@ -1,6 +1,5 @@
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
 
 export interface VintagePage {
   content: PageContent;
@@ -56,34 +55,42 @@ export class VintageProcessor {
     images: Array<{ src: string; alt: string; caption: string }>;
     advertisements: string[];
   } {
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    // Nettoyer le HTML
+    const cleanHtml = DOMPurify.sanitize(html);
+    
+    // Extraire le titre principal avec regex
+    const titleMatch = cleanHtml.match(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/i);
+    const title = titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '').trim() : 'Article Sans Titre';
 
-    // Extraire le titre principal
-    const titleElement = document.querySelector('h1, h2, h3');
-    const title = titleElement ? titleElement.textContent?.trim() || 'Article Sans Titre' : 'Article Sans Titre';
+    // Extraire les images avec regex
+    const imageMatches = cleanHtml.match(/<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi);
+    const images = imageMatches ? imageMatches.map(match => {
+      const srcMatch = match.match(/src=["']([^"']*)["']/i);
+      const altMatch = match.match(/alt=["']([^"']*)["']/i);
+      return {
+        src: srcMatch ? srcMatch[1] : '',
+        alt: altMatch ? altMatch[1] : '',
+        caption: altMatch ? altMatch[1] : ''
+      };
+    }) : [];
 
-    // Extraire les images
-    const images = Array.from(document.querySelectorAll('img')).map(img => ({
-      src: img.getAttribute('src') || '',
-      alt: img.getAttribute('alt') || '',
-      caption: img.getAttribute('alt') || ''
-    }));
+    // Extraire les paragraphes principaux avec regex
+    const paragraphMatches = cleanHtml.match(/<p[^>]*>(.*?)<\/p>/gi);
+    const paragraphs = paragraphMatches ? paragraphMatches.map(p => 
+      p.replace(/<[^>]*>/g, '').trim()
+    ).filter(p => p.length > 0) : [];
 
-    // Extraire les paragraphes principaux
-    const paragraphs = Array.from(document.querySelectorAll('p')).map(p => 
-      p.textContent?.trim() || ''
-    ).filter(p => p.length > 0);
+    // Détecter les titres secondaires avec regex
+    const subHeadlineMatches = cleanHtml.match(/<h[2-4][^>]*>(.*?)<\/h[2-4]>/gi);
+    const subHeadlines = subHeadlineMatches ? subHeadlineMatches.map(h => 
+      h.replace(/<[^>]*>/g, '').trim()
+    ).filter(h => h.length > 0) : [];
 
-    // Détecter les titres secondaires
-    const subHeadlines = Array.from(document.querySelectorAll('h2, h3, h4'))
-      .map(h => h.textContent?.trim() || '')
-      .filter(h => h.length > 0);
-
-    // Détecter les publicités (annonces)
-    const advertisements = Array.from(document.querySelectorAll('.ad-box, .advertisement'))
-      .map(ad => ad.textContent?.trim() || '')
-      .filter(ad => ad.length > 0);
+    // Détecter les publicités avec regex
+    const adMatches = cleanHtml.match(/<(div|section)[^>]*class=["'][^"']*(ad-box|advertisement)[^"']*["'][^>]*>(.*?)<\/\1>/gi);
+    const advertisements = adMatches ? adMatches.map(ad => 
+      ad.replace(/<[^>]*>/g, '').trim()
+    ).filter(ad => ad.length > 0) : [];
 
     return {
       title,
